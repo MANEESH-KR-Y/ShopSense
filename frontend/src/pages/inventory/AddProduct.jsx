@@ -3,6 +3,7 @@ import { productAPI, inventoryAPI } from "../../services/inventoryApi";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 
+
 export default function AddProduct() {
   const navigate = useNavigate();
 
@@ -12,6 +13,7 @@ export default function AddProduct() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
 
   // Fetch Categories on Mount
   useEffect(() => {
@@ -91,6 +93,7 @@ export default function AddProduct() {
                 Add multiple products at once.
               </p>
             </div>
+
           </div>
 
           {/* Notifications */}

@@ -6,6 +6,9 @@ import Sidebar from "../components/Sidebar";
 import Fuse from "fuse.js";
 import HistoryModal from "../components/HistoryModal";
 import BillTemplate from "../components/BillTemplate";
+import { useVoice } from "../hooks/useVoice";
+import Toast from "../components/Toast"; // Import Toast
+import { NLU } from "../utils/nlu";
 
 function Billing() {
     const [cart, setCart] = useState([]);
@@ -13,8 +16,86 @@ function Billing() {
     const [searchTerm, setSearchTerm] = useState("");
     const [searchResults, setSearchResults] = useState([]);
 
+    // Toast State
+    const [toast, setToast] = useState(null); // { message, type }
+
+    const showToast = (message, type = 'info') => {
+        setToast({ message, type });
+    };
+
     const billRef = useRef(null);
     const { isOnline, addToQueue } = useSync();
+
+    // Voice Integration
+    const { text: voiceText, start: startVoice, stop: stopVoice, isListening } = useVoice();
+
+    const toggleVoice = () => {
+        if (isListening) {
+            stopVoice();
+            showToast("Voice Listening Stopped", "info");
+        } else {
+            startVoice();
+            showToast("Listening... (Say 'Add 2kg Rice', 'Checkout')", "success");
+        }
+    };
+
+    useEffect(() => {
+        if (!voiceText) return;
+
+        // Use NLU Engine with Error Boundary
+        try {
+            const { intent, term, product, quantity, directDownload } = NLU.parse(voiceText, products);
+
+            switch (intent) {
+                case 'checkout':
+                    handleCheckout();
+                    break;
+                case 'generate_bill':
+                    handleGenerateBill(cart, totalAmount, true);
+                    showToast("Generating Bill...", "info");
+                    break;
+                case 'add_to_cart':
+                    addToCart(product, quantity);
+                    showToast(`Added ${quantity} x ${product.name}`, 'success');
+                    setSearchTerm("");
+                    break;
+                case 'remove_from_cart':
+                    const itemToRemove = cart.find(item => item.id === product.id);
+                    if (itemToRemove) {
+                        removeFromCart(product.id);
+                        showToast(`Removed ${product.name}`, 'info');
+                    } else {
+                        showToast(`${product.name} not in cart`, 'warning');
+                    }
+                    break;
+                case 'clear_cart':
+                    setCart([]);
+                    showToast("Cart Cleared", 'info');
+                    break;
+                case 'update_quantity':
+                    const itemToUpdate = cart.find(item => item.id === product.id);
+                    if (itemToUpdate) {
+                        updateQuantity(product.id, quantity);
+                        showToast(`Updated ${product.name} to ${quantity}`, 'success');
+                    } else {
+                        // Optional: Add it if not present? Or just warn.
+                        // For "Change quantity", usually implies existing item. 
+                        // But we can be smart: if not in cart, add it with that quantity.
+                        addToCart(product, quantity);
+                        showToast(`Added ${quantity} x ${product.name}`, 'success');
+                    }
+                    break;
+                case 'search':
+                default:
+                    setSearchTerm(term || voiceText);
+                    break;
+            }
+        } catch (err) {
+            console.error("NLU Parsing Failed:", err);
+            showToast("Voice parsing failed", "error");
+        }
+
+    }, [voiceText, products]);
 
     useEffect(() => {
         fetchProducts();
@@ -46,17 +127,17 @@ function Billing() {
         setSearchResults(results.map(r => r.item));
     }, [searchTerm, products]);
 
-    const addToCart = (product) => {
+    const addToCart = (product, qty = 1) => {
         setCart((prev) => {
             const existing = prev.find((item) => item.id === product.id);
             if (existing) {
                 return prev.map((item) =>
                     item.id === product.id
-                        ? { ...item, quantity: item.quantity + 1 }
+                        ? { ...item, quantity: item.quantity + qty } // Add parsed qty
                         : item
                 );
             }
-            return [...prev, { ...product, quantity: 1 }];
+            return [...prev, { ...product, quantity: qty }]; // Use parsed qty
         });
         setSearchTerm(""); // Clear search after adding
     };
@@ -73,9 +154,12 @@ function Billing() {
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     // GST REMOVED
+    // GST REMOVED
     const taxAmount = 0;
 
     const totalAmount = subtotal + taxAmount;
+
+    const [lastOrder, setLastOrder] = useState(null);
 
     const handleCheckout = async () => {
         if (cart.length === 0) return;
@@ -94,16 +178,17 @@ function Billing() {
         if (!isOnline) {
             addToQueue(orderData);
             setCart([]);
-            alert("⚠️ Offline: Order Saved! Will sync when online.");
+            showToast("⚠️ Offline: Order Saved! Will sync when online.", 'warning');
             return;
         }
 
         try {
             await api.post("/orders", orderData);
+            setLastOrder({ items: [...cart], total: totalAmount }); // Save for bill generation
             setCart([]);
-            alert("Order Placed Successfully!");
+            showToast("Order Placed Successfully!", 'success');
         } catch (err) {
-            alert("Checkout Failed");
+            showToast("Checkout Failed", 'error');
         }
     };
 
@@ -111,14 +196,71 @@ function Billing() {
     const [previewImage, setPreviewImage] = useState(null);
     const [showHistory, setShowHistory] = useState(false);
 
-    const handleGenerateBill = async () => {
-        if (!billRef.current) return;
+    // Modified to accept optional data for "Last Bill" or "History Bill" scenarios
+    // If no args provided, it defaults to using state refs (which might be empty if we rely on 'cart' state directly in the hidden template)
+    // Wait, BillTemplate uses props `cart` and `totalAmount`. 
+    // We need to temporarily SWAP the props passed to BillTemplate to render the correct bill?
+    // Actually, generateBillImage captures the DOM element. The DOM element re-renders based on props.
+    // So we need a state `billData` that controls what BillTemplate renders.
+
+    // Better approach: Let's create a separate state for Bill Template Data
+    const [billData, setBillData] = useState({ cart: [], total: 0 });
+
+    // Sync current cart to billData when valid
+    useEffect(() => {
+        if (cart.length > 0) {
+            setBillData({ cart, total: totalAmount });
+        }
+    }, [cart, totalAmount]);
+
+    const handleGenerateBill = async (items = cart, total = totalAmount, directDownload = false) => {
+        // Force update bill data for the snapshot
+        // Use JSON stringify to compare content, or just always set it if we are switching contexts
+        const currentDataStr = JSON.stringify({ cart: billData.cart, total: billData.total });
+        const newDataStr = JSON.stringify({ cart: items, total });
+
+        if (currentDataStr !== newDataStr) {
+            console.log("Updating Bill Data for Generation...");
+            setBillData({ cart: items, total });
+            // Wait for React to render the updated state into the ref
+            await new Promise(r => setTimeout(r, 500));
+        }
+
+        if (!billRef.current) {
+            console.error("Bill Ref not found!");
+            return;
+        }
+
         try {
+            console.log("Generating Bill Image...");
+            // Pass the element directly. generateBillImage handles the cloning.
+            // Note: We might need to ensure the element is visible or at least rendered in DOM.
+            // The Ref is currently in a div with opacity-0 (which is fine for html2canvas usually, but -z-50 might be tricky if it thinks its not visible).
+            // Actually, display:none is bad, but opacity:0 is usually OK. 
+            // Let's verify billRef content is not empty.
+            if (billRef.current.innerHTML === "") {
+                console.error("Bill Ref is empty!");
+                showToast("Error: Bill template is empty.", 'error');
+                return;
+            }
+
             const image = await generateBillImage(billRef.current);
-            setPreviewImage(image);
+            console.log("Bill Image Generated. Direct Download:", directDownload);
+
+            if (directDownload) {
+                const link = document.createElement("a");
+                link.href = image;
+                link.download = `ShopSense-Bill-${Date.now()}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showToast("Bill Downloaded Successfully!", 'success');
+            } else {
+                setPreviewImage(image);
+            }
         } catch (err) {
             console.error("Bill generation failed", err);
-            alert("Failed to generate bill: " + err.message);
+            showToast("Failed to generate bill: " + err.message, 'error');
         }
     };
 
@@ -131,6 +273,7 @@ function Billing() {
         link.click();
         document.body.removeChild(link);
         setPreviewImage(null); // Close after download
+        showToast("Bill Downloaded!", 'success');
     };
 
     return (
@@ -138,6 +281,15 @@ function Billing() {
             <Sidebar />
             <main className="flex-1 p-8 overflow-y-auto relative bg-[var(--color-brand-black)]">
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-soft-light pointer-events-none"></div>
+
+                {/* Toast Notification */}
+                {toast && (
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={() => setToast(null)}
+                    />
+                )}
 
                 <div className="flex justify-between items-center mb-8 border-b-2 border-[var(--color-brand-blue)] pb-2 relative z-10">
                     <h1 className="text-3xl font-bold text-[var(--color-brand-text)]">
@@ -156,15 +308,22 @@ function Billing() {
                     <div className="bg-[var(--color-brand-surface)] border border-[var(--color-brand-border)] p-8 rounded-lg shadow-xl relative h-[600px] flex flex-col">
                         <h2 className="text-2xl font-bold mb-6 text-white uppercase tracking-wider">Product Search</h2>
 
-                        <div className="mb-6">
+                        <div className="mb-6 relative">
                             <input
                                 autoFocus
                                 type="text"
-                                className="w-full bg-[var(--color-brand-black)] border border-[var(--color-brand-border)] text-white p-4 rounded-lg text-lg focus:border-[var(--color-brand-blue)] focus:outline-none placeholder-gray-600"
+                                className="w-full bg-[var(--color-brand-black)] border border-[var(--color-brand-border)] text-white p-4 pr-12 rounded-lg text-lg focus:border-[var(--color-brand-blue)] focus:outline-none placeholder-gray-600"
                                 placeholder="Search by name..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
+                            <button
+                                onClick={toggleVoice}
+                                className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all duration-300 ${isListening ? 'bg-red-600 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'text-gray-400 hover:text-white hover:bg-[var(--color-brand-border)]'}`}
+                                title={isListening ? "Stop Listening" : "Start Voice Search"}
+                            >
+                                {isListening ? '🛑' : '🎤'}
+                            </button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
@@ -252,16 +411,19 @@ function Billing() {
                         </div>
 
                         {/* Hidden Template for Generation ONLY */}
-                        <div className="absolute top-0 left-0 w-full pointer-events-none opacity-0 -z-50 overflow-hidden h-0">
+                        {/* Position at top:0 left:0 but behind everything (z-index -1000) and fully opaque. 
+                            This ensures the browser renders it. The main app background covers it. */}
+                        <div style={{ position: "fixed", top: 0, left: "-1000px", width: "400px", zIndex: -1000, pointerEvents: "none", opacity: 0 }}>
                             <BillTemplate
                                 ref={billRef}
-                                cart={cart}
-                                subtotal={subtotal}
-                                totalAmount={totalAmount}
+                                cart={billData.cart}
+                                subtotal={billData.total}
+                                totalAmount={billData.total}
+                                printing={true}
                             />
                         </div>
 
-                        {/* Action Buttons (Outside the Bill Ref to avoid capture) */}
+                        {/* Action Buttons */}
                         <div className="mt-4 grid gap-3">
                             <button
                                 onClick={handleCheckout}
@@ -272,10 +434,20 @@ function Billing() {
                             </button>
                             {cart.length > 0 && (
                                 <button
-                                    onClick={handleGenerateBill}
+                                    onClick={() => handleGenerateBill(cart, totalAmount)}
                                     className="w-full py-3 bg-[var(--color-brand-surface)] border border-[var(--color-brand-border)] text-[var(--color-brand-text)] font-bold text-sm hover:bg-[var(--color-brand-border)] transition-all uppercase rounded-md"
                                 >
                                     Preview & Download Bill 📸
+                                </button>
+                            )}
+
+                            {/* Download Last Bill Button (Visible after checkout) */}
+                            {cart.length === 0 && lastOrder && (
+                                <button
+                                    onClick={() => handleGenerateBill(lastOrder.items, lastOrder.total, true)}
+                                    className="w-full py-3 bg-green-900/20 border border-green-500/50 text-green-400 font-bold text-sm hover:bg-green-900/40 transition-all uppercase rounded-md animate-in fade-in slide-in-from-top-2"
+                                >
+                                    Download Last Bill 🧾
                                 </button>
                             )}
                         </div>

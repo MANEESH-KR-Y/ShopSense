@@ -27,7 +27,8 @@ export default function Products() {
         fetchProducts(); // Refresh list
       } catch (err) {
         console.error("Failed to delete", err);
-        alert("Failed to delete product");
+        const msg = err.response?.data?.error || "Failed to delete product";
+        alert(msg);
       }
     }
   };

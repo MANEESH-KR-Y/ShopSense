@@ -12,6 +12,8 @@ export default function Profile() {
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
+    const [notifications, setNotifications] = useState([]);
+
     useEffect(() => {
         if (user) {
             setForm({
@@ -19,8 +21,36 @@ export default function Profile() {
                 email: user.email || "",
                 phone: user.phone || ""
             });
+            fetchNotifications();
         }
     }, [user]);
+
+    const fetchNotifications = async () => {
+        try {
+            const { data } = await authAPI.getNotifications();
+            setNotifications(data);
+        } catch (err) {
+            console.error("Failed to fetch notifications", err);
+        }
+    };
+
+    const handleMarkRead = async (id) => {
+        try {
+            await authAPI.markNotificationRead(id);
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleMarkAllRead = async () => {
+        try {
+            await authAPI.markAllNotificationsRead();
+            setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -82,6 +112,41 @@ export default function Profile() {
                         >
                             Log Out
                         </button>
+                    </div>
+
+                    {/* Notifications Section */}
+                    <div className="card mb-8">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                🔔 Notifications
+                            </h2>
+                            <button
+                                onClick={handleMarkAllRead}
+                                className="text-sm text-[var(--color-brand-blue)] hover:text-blue-400 font-bold"
+                            >
+                                Mark all as read
+                            </button>
+                        </div>
+
+                        <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                            {notifications.length === 0 ? (
+                                <p className="text-[var(--color-brand-text-muted)] text-center py-4">No new notifications</p>
+                            ) : (
+                                notifications.map(notif => (
+                                    <div
+                                        key={notif.id}
+                                        onClick={() => handleMarkRead(notif.id)}
+                                        className={`p-4 rounded-lg border transition-all cursor-pointer ${notif.is_read ? 'bg-transparent border-[var(--color-brand-border)] opacity-60' : 'bg-[var(--color-brand-surface)] border-[var(--color-brand-blue)] shadow-md shadow-blue-900/10'}`}
+                                    >
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className={`font-bold ${notif.is_read ? 'text-[var(--color-brand-text-muted)]' : 'text-white'}`}>{notif.title}</h3>
+                                            <span className="text-xs text-[var(--color-brand-text-muted)]">{new Date(notif.created_at).toLocaleDateString()}</span>
+                                        </div>
+                                        <p className="text-sm text-[var(--color-brand-text-muted)]">{notif.message}</p>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
 
                     <div className="card space-y-8">

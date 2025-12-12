@@ -35,14 +35,18 @@ export const authAPI = {
   logout: () => api.post("/auth/logout"),
   getCurrentUser: () => api.get("/auth/me"),
   refresh: () => api.post("/auth/token"),
-  updateProfile: (data) => api.put("/auth/update", data),
+  updateProfile: (data) => api.put("/auth/profile", data),
   getAnalytics: () => api.get("/analytics/stats"),
-  getSalesAnalysis: (query) => api.get(`/analytics/sales?${query}`),
+  getSalesAnalysis: (params) => api.get("/analytics/sales", { params }), // { period, date, year, month }
   getGstReport: () => api.get("/reports/gst"),
   sendOtp: (email) => api.post("/auth/send-otp", { email }),
   loginOtp: (data) => api.post("/auth/login-otp", data),
   resetPassword: (data) => api.post("/auth/reset-password", data),
-  changePassword: (data) => api.post("/auth/change-password", data),
+  changePassword: (data) => api.put("/auth/change-password", data),
+  // Notifications
+  getNotifications: () => api.get("/notifications"),
+  markNotificationRead: (id) => api.put(`/notifications/${id}/read`),
+  markAllNotificationsRead: () => api.put("/notifications/read-all"),
 };
 
 export default api;

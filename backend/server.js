@@ -36,6 +36,7 @@ app.use("/inventory", inventoryRoutes);
 app.use("/orders", require("./routes/order"));
 app.use("/analytics", require("./routes/analytics"));
 app.use("/reports", require("./routes/reports"));
+app.use("/notifications", require("./routes/notifications"));
 
 // Test route
 app.get("/", (req, res) => {
@@ -68,6 +69,9 @@ db.query("SELECT NOW()")
     await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER;`);
     await db.query(`ALTER TABLE categories ADD COLUMN IF NOT EXISTS user_id INTEGER;`);
     console.log("Schema migrations applied.");
+
+    // Start Scheduler
+    require('./cron/scheduler');
 
     app.listen(PORT, () => {
       console.log("Backend running on port", PORT);
