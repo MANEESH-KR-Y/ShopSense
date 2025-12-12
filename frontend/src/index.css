@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-black: #000000;
+  --color-brand-surface: #111111;
+  --color-brand-border: #333333;
+  --color-brand-text: #ffffff;
+  --color-brand-text-muted: #9ca3af;
+  --color-brand-blue: #3b82f6;
+  --color-brand-blue-hover: #2563eb;
+
+  --font-sans: 'Inter', sans-serif;
+}
+
+/* Custom Base Styles */
+@layer base {
+  body {
+    background-color: var(--color-brand-black);
+    color: var(--color-brand-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+}
+
+/* Custom Utilities */
+@utility input-field {
+  @apply w-full bg-[var(--color-brand-surface)] border border-[var(--color-brand-border)] rounded-md px-4 py-3 text-white focus:outline-none focus:border-[var(--color-brand-blue)] transition-colors placeholder-[var(--color-brand-text-muted)]/50;
+}
+
+@utility btn {
+  @apply px-4 py-2 rounded font-semibold transition-all duration-200 cursor-pointer text-center;
+}
+
+@utility btn-primary {
+  @apply bg-[var(--color-brand-blue)] text-white hover:bg-[var(--color-brand-blue-hover)] border border-transparent shadow-lg shadow-indigo-900/20;
+}
+
+@utility btn-danger {
+  @apply bg-red-600 text-white hover:bg-red-700 border border-transparent;
+}
+
+@utility card {
+  @apply bg-[var(--color-brand-surface)] p-6 rounded-xl border border-[var(--color-brand-border)] shadow-xl;
+}
+
+/* Animations */
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-brand-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-brand-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-text-muted);
+}
+
+.btn-primary {
+  @apply bg-[var(--color-brand-blue)] text-white hover:bg-[var(--color-brand-blue-hover)] shadow-lg shadow-blue-900/20;
+}
+
+.btn-secondary {
+  @apply bg-[var(--color-brand-surface)] border border-[var(--color-brand-border)] text-[var(--color-brand-text)] hover:bg-[var(--color-brand-border)];
+}
+
+.btn-danger {
+  @apply bg-red-900/20 border border-red-900/50 text-red-400 hover:bg-red-900/30;
+}
+
+/* Card Utility */
+.card {
+  @apply bg-[var(--color-brand-black)] border border-[var(--color-brand-border)] rounded-lg p-6;
+}
+
+/* Input Utility */
+.input-field {
+  @apply w-full bg-[var(--color-brand-border)] border border-[var(--color-brand-text-muted)] rounded-md px-4 py-3 text-[var(--color-brand-text)] focus:ring-2 focus:ring-[var(--color-brand-blue)] focus:border-transparent outline-none transition-all placeholder-gray-500;
+}
