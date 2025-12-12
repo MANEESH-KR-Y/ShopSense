@@ -43,4 +43,57 @@ router.get("/stats", auth.verifyToken, async (req, res) => {
     }
 });
 
+// 4. Sales Analytics (Daily, Monthly, Yearly)
+router.get("/sales", auth.verifyToken, async (req, res) => {
+    try {
+        const { period, date, year, month } = req.query; // period: 'daily', 'monthly', 'yearly'
+        let query = "";
+        let params = [req.userId];
+
+        if (period === "daily") {
+            // date format: YYYY-MM-DD
+            query = `
+                SELECT 
+                    SUM(total_amount) as total_sales, 
+                    COUNT(*) as total_orders 
+                FROM orders 
+                WHERE user_id = $1 AND DATE(created_at) = $2
+            `;
+            params.push(date);
+        } else if (period === "monthly") {
+            // year: YYYY, month: 1-12
+            query = `
+                SELECT 
+                    SUM(total_amount) as total_sales, 
+                    COUNT(*) as total_orders 
+                FROM orders 
+                WHERE user_id = $1 
+                AND EXTRACT(YEAR FROM created_at) = $2 
+                AND EXTRACT(MONTH FROM created_at) = $3
+            `;
+            params.push(year, month);
+        } else if (period === "yearly") {
+            // year: YYYY
+            query = `
+                SELECT 
+                    SUM(total_amount) as total_sales, 
+                    COUNT(*) as total_orders 
+                FROM orders 
+                WHERE user_id = $1 
+                AND EXTRACT(YEAR FROM created_at) = $2
+            `;
+            params.push(year);
+        } else {
+            return res.status(400).json({ error: "Invalid period" });
+        }
+
+        const result = await db.query(query, params);
+        res.json(result.rows[0] || { total_sales: 0, total_orders: 0 });
+
+    } catch (err) {
+        console.error("ANALYTICS ERROR:", err);
+        res.status(500).json({ error: "Failed to fetch sales data" });
+    }
+});
+
 module.exports = router;
