@@ -15,6 +15,7 @@ function Billing() {
     const [products, setProducts] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [searchResults, setSearchResults] = useState([]);
+    const [lastOrder, setLastOrder] = useState(null);
 
     // Toast State
     const [toast, setToast] = useState(null); // { message, type }
@@ -39,94 +40,12 @@ function Billing() {
         }
     };
 
-    useEffect(() => {
-        if (!voiceText) return;
+    // --- CALCULATIONS ---
+    const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const taxAmount = 0;
+    const totalAmount = subtotal + taxAmount;
 
-        // Use NLU Engine with Error Boundary
-        try {
-            const { intent, term, product, quantity, directDownload } = NLU.parse(voiceText, products);
-
-            switch (intent) {
-                case 'checkout':
-                    handleCheckout();
-                    break;
-                case 'generate_bill':
-                    handleGenerateBill(cart, totalAmount, true);
-                    showToast("Generating Bill...", "info");
-                    break;
-                case 'add_to_cart':
-                    addToCart(product, quantity);
-                    showToast(`Added ${quantity} x ${product.name}`, 'success');
-                    setSearchTerm("");
-                    break;
-                case 'remove_from_cart':
-                    const itemToRemove = cart.find(item => item.id === product.id);
-                    if (itemToRemove) {
-                        removeFromCart(product.id);
-                        showToast(`Removed ${product.name}`, 'info');
-                    } else {
-                        showToast(`${product.name} not in cart`, 'warning');
-                    }
-                    break;
-                case 'clear_cart':
-                    setCart([]);
-                    showToast("Cart Cleared", 'info');
-                    break;
-                case 'update_quantity':
-                    const itemToUpdate = cart.find(item => item.id === product.id);
-                    if (itemToUpdate) {
-                        updateQuantity(product.id, quantity);
-                        showToast(`Updated ${product.name} to ${quantity}`, 'success');
-                    } else {
-                        // Optional: Add it if not present? Or just warn.
-                        // For "Change quantity", usually implies existing item. 
-                        // But we can be smart: if not in cart, add it with that quantity.
-                        addToCart(product, quantity);
-                        showToast(`Added ${quantity} x ${product.name}`, 'success');
-                    }
-                    break;
-                case 'search':
-                default:
-                    setSearchTerm(term || voiceText);
-                    break;
-            }
-        } catch (err) {
-            console.error("NLU Parsing Failed:", err);
-            showToast("Voice parsing failed", "error");
-        }
-
-    }, [voiceText, products]);
-
-    useEffect(() => {
-        fetchProducts();
-    }, []);
-
-    const fetchProducts = async () => {
-        try {
-            const res = await api.get("/products");
-            setProducts(res.data);
-        } catch (err) {
-            console.error("Failed to fetch products", err);
-        }
-    };
-
-    // Real-time Search
-    useEffect(() => {
-        if (!searchTerm.trim()) {
-            setSearchResults([]);
-            return;
-        }
-
-        const fuse = new Fuse(products, {
-            keys: ["name", "id"], // Search by name or ID
-            threshold: 0.3, // Stricter for manual typing
-            distance: 100
-        });
-
-        const results = fuse.search(searchTerm);
-        setSearchResults(results.map(r => r.item));
-    }, [searchTerm, products]);
-
+    // --- HELPER FUNCTIONS ---
     const addToCart = (product, qty = 1) => {
         setCart((prev) => {
             const existing = prev.find((item) => item.id === product.id);
@@ -149,17 +68,16 @@ function Billing() {
     const updateQuantity = (id, newQty) => {
         if (newQty < 1) return;
         setCart(prev => prev.map(item => item.id === id ? { ...item, quantity: newQty } : item));
-    }
+    };
 
-    const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-    // GST REMOVED
-    // GST REMOVED
-    const taxAmount = 0;
-
-    const totalAmount = subtotal + taxAmount;
-
-    const [lastOrder, setLastOrder] = useState(null);
+    const fetchProducts = async () => {
+        try {
+            const res = await api.get("/products");
+            setProducts(res.data);
+        } catch (err) {
+            console.error("Failed to fetch products", err);
+        }
+    };
 
     const handleCheckout = async () => {
         if (cart.length === 0) return;
@@ -187,7 +105,7 @@ function Billing() {
             setLastOrder({ items: [...cart], total: totalAmount }); // Save for bill generation
             setCart([]);
             showToast("Order Placed Successfully!", 'success');
-        } catch (err) {
+        } catch {
             showToast("Checkout Failed", 'error');
         }
     };
@@ -195,27 +113,10 @@ function Billing() {
     // --- BILL GENERATION & HISTORY ---
     const [previewImage, setPreviewImage] = useState(null);
     const [showHistory, setShowHistory] = useState(false);
-
-    // Modified to accept optional data for "Last Bill" or "History Bill" scenarios
-    // If no args provided, it defaults to using state refs (which might be empty if we rely on 'cart' state directly in the hidden template)
-    // Wait, BillTemplate uses props `cart` and `totalAmount`. 
-    // We need to temporarily SWAP the props passed to BillTemplate to render the correct bill?
-    // Actually, generateBillImage captures the DOM element. The DOM element re-renders based on props.
-    // So we need a state `billData` that controls what BillTemplate renders.
-
-    // Better approach: Let's create a separate state for Bill Template Data
     const [billData, setBillData] = useState({ cart: [], total: 0 });
-
-    // Sync current cart to billData when valid
-    useEffect(() => {
-        if (cart.length > 0) {
-            setBillData({ cart, total: totalAmount });
-        }
-    }, [cart, totalAmount]);
 
     const handleGenerateBill = async (items = cart, total = totalAmount, directDownload = false) => {
         // Force update bill data for the snapshot
-        // Use JSON stringify to compare content, or just always set it if we are switching contexts
         const currentDataStr = JSON.stringify({ cart: billData.cart, total: billData.total });
         const newDataStr = JSON.stringify({ cart: items, total });
 
@@ -233,11 +134,6 @@ function Billing() {
 
         try {
             console.log("Generating Bill Image...");
-            // Pass the element directly. generateBillImage handles the cloning.
-            // Note: We might need to ensure the element is visible or at least rendered in DOM.
-            // The Ref is currently in a div with opacity-0 (which is fine for html2canvas usually, but -z-50 might be tricky if it thinks its not visible).
-            // Actually, display:none is bad, but opacity:0 is usually OK. 
-            // Let's verify billRef content is not empty.
             if (billRef.current.innerHTML === "") {
                 console.error("Bill Ref is empty!");
                 showToast("Error: Bill template is empty.", 'error');
@@ -275,6 +171,96 @@ function Billing() {
         setPreviewImage(null); // Close after download
         showToast("Bill Downloaded!", 'success');
     };
+
+    // --- EFFECTS ---
+
+    // Voice NLU Effect
+    useEffect(() => {
+        if (!voiceText) return;
+
+        // Use NLU Engine with Error Boundary
+        try {
+            const { intent, term, product, quantity } = NLU.parse(voiceText, products);
+
+            switch (intent) {
+                case 'checkout':
+                    handleCheckout();
+                    break;
+                case 'generate_bill':
+                    handleGenerateBill(cart, totalAmount, true);
+                    showToast("Generating Bill...", "info");
+                    break;
+                case 'add_to_cart':
+                    addToCart(product, quantity);
+                    showToast(`Added ${quantity} x ${product.name}`, 'success');
+                    setSearchTerm("");
+                    break;
+                case 'remove_from_cart': {
+                    const itemToRemove = cart.find(item => item.id === product.id);
+                    if (itemToRemove) {
+                        removeFromCart(product.id);
+                        showToast(`Removed ${product.name}`, 'info');
+                    } else {
+                        showToast(`${product.name} not in cart`, 'warning');
+                    }
+                    break;
+                }
+                case 'clear_cart':
+                    setCart([]);
+                    showToast("Cart Cleared", 'info');
+                    break;
+                case 'update_quantity': {
+                    const itemToUpdate = cart.find(item => item.id === product.id);
+                    if (itemToUpdate) {
+                        updateQuantity(product.id, quantity);
+                        showToast(`Updated ${product.name} to ${quantity}`, 'success');
+                    } else {
+                        addToCart(product, quantity);
+                        showToast(`Added ${quantity} x ${product.name}`, 'success');
+                    }
+                    break;
+                }
+                case 'search':
+                default:
+                    setSearchTerm(term || voiceText);
+                    break;
+            }
+        } catch (err) {
+            console.error("NLU Parsing Failed:", err);
+            showToast("Voice parsing failed", "error");
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [voiceText, products]);
+
+    // Initial Fetch
+    useEffect(() => {
+        fetchProducts();
+    }, []);
+
+    // Real-time Search
+    useEffect(() => {
+        if (!searchTerm.trim()) {
+            setSearchResults([]);
+            return;
+        }
+
+        const fuse = new Fuse(products, {
+            keys: ["name", "id"], // Search by name or ID
+            threshold: 0.3, // Stricter for manual typing
+            distance: 100
+        });
+
+        const results = fuse.search(searchTerm);
+        setSearchResults(results.map(r => r.item));
+    }, [searchTerm, products]);
+
+    // Sync current cart to billData when valid
+    useEffect(() => {
+        if (cart.length > 0) {
+            setBillData({ cart, total: totalAmount });
+        }
+    }, [cart, totalAmount]);
+
 
     return (
         <div className="flex h-screen bg-[var(--color-brand-black)] text-[var(--color-brand-text)] font-sans overflow-hidden">
@@ -411,8 +397,6 @@ function Billing() {
                         </div>
 
                         {/* Hidden Template for Generation ONLY */}
-                        {/* Position at top:0 left:0 but behind everything (z-index -1000) and fully opaque. 
-                            This ensures the browser renders it. The main app background covers it. */}
                         <div style={{ position: "fixed", top: 0, left: "-1000px", width: "400px", zIndex: -1000, pointerEvents: "none", opacity: 0 }}>
                             <BillTemplate
                                 ref={billRef}

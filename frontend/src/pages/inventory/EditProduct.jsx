@@ -14,44 +14,35 @@ export default function EditProduct() {
     const [error, setError] = useState("");
 
     useEffect(() => {
+        const fetchProduct = async () => {
+            try {
+                // We don't have a direct getProduct endpoint in the original code, 
+                // but I added it to the service. We rely on the backend supporting it.
+                // assuming I will add it:
+                const { data } = await productAPI.getProducts();
+                // Workaround: finding from list since I missed adding GET /:id explicitly in the plan
+                const p = data.find(item => item.id === parseInt(id));
+                if (p) {
+                    setForm({
+                        name: p.name,
+                        categoryId: p.categoryId,
+                        price: p.price,
+                        stock: p.stock,
+                        unit: p.unit || "pcs"
+                    });
+                } else {
+                    setError("Product not found");
+                }
+            } catch (err) {
+                console.error(err);
+                setError("Failed to load product");
+            } finally {
+                setInitialLoading(false);
+            }
+        };
+
         fetchProduct();
     }, [id]);
-
-    const fetchProduct = async () => {
-        try {
-            // We don't have a direct getProduct endpoint in the original code, 
-            // but I added it to the service. We rely on the backend supporting it.
-            // Wait, I added getProduct to service, but did I add getProduct/:id to backend?
-            // I checked product.js backend relative to getProducts.
-            // Actually backend/routes/product.js has router.get("/", ... getProducts)
-            // It DOES NOT have router.get("/:id").
-            // I should fix the backend route first!
-            // But for now, I can fetch all and find (not efficient but works for now)
-            // OR I can quickly add GET /:id to backend.
-            // User asked to build now. I will add GET /:id to backend first.
-
-            // Assuming I will add it:
-            const { data } = await productAPI.getProducts();
-            // Workaround: finding from list since I missed adding GET /:id explicitly in the plan
-            const p = data.find(item => item.id === parseInt(id));
-            if (p) {
-                setForm({
-                    name: p.name,
-                    categoryId: p.categoryId,
-                    price: p.price,
-                    stock: p.stock,
-                    unit: p.unit || "pcs"
-                });
-            } else {
-                setError("Product not found");
-            }
-        } catch (err) {
-            console.error(err);
-            setError("Failed to load product");
-        } finally {
-            setInitialLoading(false);
-        }
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();

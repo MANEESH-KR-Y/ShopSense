@@ -83,7 +83,7 @@ export default function Login() {
       } else {
         setError(res.error || "Login failed. Please check your credentials.");
       }
-    } catch (err) {
+    } catch {
       setError("Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
@@ -194,7 +194,7 @@ export default function Login() {
 
         <div className="text-center mt-8 pt-8 border-t border-[var(--color-brand-border)]">
           <p className="text-[var(--color-brand-text-muted)] text-sm">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link to="/register" className="text-[var(--color-brand-blue)] hover:text-[var(--color-brand-blue-hover)] font-bold transition-colors ml-1">
               Create Account
             </Link>

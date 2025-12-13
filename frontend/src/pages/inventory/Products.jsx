@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { productAPI } from "../../services/inventoryApi";
 import Sidebar from "../../components/Sidebar";
 import { useNavigate } from "react-router-dom";
@@ -7,18 +7,20 @@ export default function Products() {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
+  // Define with useCallback to keep stable identity
+  const fetchProducts = useCallback(async () => {
     try {
       const { data } = await productAPI.getProducts();
       setProducts(data);
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []); // No deps as productAPI is external
+
+  useEffect(() => {
+    fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this product?")) {

@@ -5,13 +5,13 @@ import HistoryModal from "../components/HistoryModal";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [stats, setStats] = useState([
+  const [stats] = useState([
     { title: "Total Sales", value: "₹0", colorClass: "text-[var(--color-brand-blue)]" },
     { title: "Active Orders", value: "0", colorClass: "text-green-400" },
     { title: "Low Stock", value: "0", colorClass: "text-red-400" },
     { title: "Total Products", value: "0", colorClass: "text-[var(--color-brand-text)]" }
   ]);
-  const [recentActivity, setRecentActivity] = useState([]);
+  const [recentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
 
@@ -25,7 +25,7 @@ export default function Dashboard() {
         const { getToken, messaging } = await import("../firebase");
         const permission = await Notification.requestPermission();
         if (permission === "granted") {
-          const token = await getToken(messaging, { vapidKey: "BMw5Q9yE..." }); // Need VAPID key if web push, or just default
+          await getToken(messaging, { vapidKey: "BMw5Q9yE..." }); // Need VAPID key if web push, or just default
           // console.log("Notification Token:", token);
           // In real app: api.post('/auth/device-token', { token });
         }

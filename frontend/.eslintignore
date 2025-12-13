@@ -1,5 +1,0 @@
-dist/
-build/
-public/firebase-messaging-sw.js
-public/sw.js
-public/workbox-*.js

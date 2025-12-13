@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { productAPI, inventoryAPI } from "../../services/inventoryApi";
-import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 
 
 export default function AddProduct() {
-  const navigate = useNavigate();
 
   // State
   const [scannedItems, setScannedItems] = useState([]); // List of products to add
@@ -17,17 +15,16 @@ export default function AddProduct() {
 
   // Fetch Categories on Mount
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await inventoryAPI.getCategories();
+        setCategories(res.data);
+      } catch (err) {
+        console.error("Failed to fetch categories", err);
+      }
+    };
     fetchCategories();
   }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const res = await inventoryAPI.getCategories();
-      setCategories(res.data);
-    } catch (err) {
-      console.error("Failed to fetch categories", err);
-    }
-  };
 
   const handleItemChange = (id, field, value) => {
     setScannedItems(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
@@ -123,7 +120,7 @@ export default function AddProduct() {
                   </button>
                 </div>
               ) : (
-                scannedItems.map((item, index) => (
+                scannedItems.map((item) => (
                   <div key={item.id} className="grid grid-cols-12 p-4 items-center gap-4 hover:bg-[var(--color-brand-black)]/30 transition-colors">
                     <div className="col-span-4">
                       <input

@@ -3,8 +3,9 @@ import React, { forwardRef } from "react";
 
 const BillTemplate = forwardRef(({ cart, subtotal, totalAmount, date, printing = false }, ref) => {
     // Helper for centering text in mono
-    const center = "text-center";
     const divider = "border-t border-dashed border-black my-2";
+
+    const [billNo] = React.useState(() => Math.floor(Math.random() * 100000));
 
     return (
         <div
@@ -27,7 +28,7 @@ const BillTemplate = forwardRef(({ cart, subtotal, totalAmount, date, printing =
                 <span>Time: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
             <div className="flex justify-between text-[10px] mb-2">
-                <span>Bill No: {Math.floor(Math.random() * 100000)}</span>
+                <span>Bill No: {billNo}</span>
                 <span>Cashier: Admin</span>
             </div>
 
@@ -93,5 +94,7 @@ const BillTemplate = forwardRef(({ cart, subtotal, totalAmount, date, printing =
         </div >
     );
 });
+
+BillTemplate.displayName = "BillTemplate";
 
 export default BillTemplate;

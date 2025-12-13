@@ -5,25 +5,8 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [accessToken, setAccessToken] = useState(null);
+  const [, setAccessToken] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // --------------------------
-  // Load session on refresh
-  // --------------------------
-  useEffect(() => {
-    const init = async () => {
-      // Always try to refresh/get a token first to ensure we have one for API calls
-      const refreshed = await tryRefresh();
-      if (!refreshed) {
-        setLoading(false);
-      } else {
-        setLoading(false);
-      }
-    };
-
-    init();
-  }, []);
 
   // --------------------------
   // Refresh access token
@@ -45,6 +28,23 @@ export const AuthProvider = ({ children }) => {
       return false;
     }
   };
+
+  // --------------------------
+  // Load session on refresh
+  // --------------------------
+  useEffect(() => {
+    const init = async () => {
+      // Always try to refresh/get a token first to ensure we have one for API calls
+      const refreshed = await tryRefresh();
+      if (!refreshed) {
+        setLoading(false);
+      } else {
+        setLoading(false);
+      }
+    };
+
+    init();
+  }, []);
 
   // --------------------------
   // Login
@@ -92,7 +92,9 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await authAPI.logout();
-    } catch { }
+    } catch {
+      // ignore
+    }
 
     window.__accessToken = null;
     setAccessToken(null);

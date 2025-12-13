@@ -19,7 +19,7 @@ export default function Register() {
       } else {
         setError(res.error || "Registration failed");
       }
-    } catch (err) {
+    } catch {
       setError("Registration failed");
     } finally {
       setIsLoading(false);

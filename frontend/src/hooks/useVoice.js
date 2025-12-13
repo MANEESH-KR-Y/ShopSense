@@ -1,17 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 export const useVoice = () => {
+    const isSupported = 'webkitSpeechRecognition' in window;
     const [isListening, setIsListening] = useState(false);
     const [text, setText] = useState("");
-    const [error, setError] = useState(null);
+    const [error, setError] = useState(isSupported ? null : "Web Speech API not supported in this browser.");
     const recognitionRef = useRef(null);
     const shouldListenRef = useRef(false); // Track intended state
 
     useEffect(() => {
-        if (!('webkitSpeechRecognition' in window)) {
-            setError("Web Speech API not supported in this browser.");
-            return;
-        }
+        if (!isSupported) return;
 
         const recognition = new window.webkitSpeechRecognition();
         recognition.continuous = false; // We use auto-restart instead of native continuous for better compatibility
@@ -44,8 +42,8 @@ export const useVoice = () => {
             if (shouldListenRef.current) {
                 try {
                     recognition.start();
-                } catch (e) {
-                    console.error("Restart error:", e);
+                } catch {
+                    console.error("Restart error");
                     setIsListening(false);
                 }
             } else {
@@ -54,7 +52,7 @@ export const useVoice = () => {
         };
 
         recognitionRef.current = recognition;
-    }, []);
+    }, [isSupported]);
 
     const start = useCallback(() => {
         setText("");
@@ -62,7 +60,7 @@ export const useVoice = () => {
         if (recognitionRef.current) {
             try {
                 recognitionRef.current.start();
-            } catch (e) {
+            } catch {
                 // Ignore if already started
             }
         }

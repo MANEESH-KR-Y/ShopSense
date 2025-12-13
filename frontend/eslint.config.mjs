@@ -35,6 +35,11 @@ export default [
       "react/prop-types": "off",
       "no-unused-vars": "warn",
     },
+    settings: {
+      react: {
+        version: "detect",
+      },
+    },
   },
 
   // Ignore build files
