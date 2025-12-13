@@ -10,8 +10,12 @@ const BillTemplate = forwardRef(({ cart, subtotal, totalAmount, date, printing =
     return (
         <div
             ref={ref}
-            className={`bg-white text-black font-mono p-4 text-xs md:text-sm leading-tight flex flex-col relative ${printing ? 'w-[400px] h-auto overflow-visible' : 'w-full h-[600px] overflow-hidden'}`}
-            style={{ fontFamily: "'Courier New', Courier, monospace" }}
+            className={`font-mono p-4 text-xs md:text-sm leading-tight flex flex-col relative ${printing ? 'w-[400px] h-auto overflow-visible' : 'w-full h-[600px] overflow-hidden'}`}
+            style={{
+                fontFamily: "'Courier New', Courier, monospace",
+                backgroundColor: "#ffffff",
+                color: "#000000"
+            }}
         >
             {/* Header */}
             <div className="flex flex-col items-center mb-4">
@@ -32,10 +36,10 @@ const BillTemplate = forwardRef(({ cart, subtotal, totalAmount, date, printing =
                 <span>Cashier: Admin</span>
             </div>
 
-            <div className={divider}></div>
+            <div className={divider} style={{ borderColor: "#000000" }}></div>
 
             {/* Table Header */}
-            <div className="grid grid-cols-12 gap-1 font-bold text-[10px] uppercase mb-1 border-b border-black pb-1">
+            <div className="grid grid-cols-12 gap-1 font-bold text-[10px] uppercase mb-1 border-b pb-1" style={{ borderColor: "#000000" }}>
                 <div className="col-span-5">Item</div>
                 <div className="col-span-2 text-center">Qty</div>
                 <div className="col-span-2 text-right">Rate</div>
@@ -48,7 +52,7 @@ const BillTemplate = forwardRef(({ cart, subtotal, totalAmount, date, printing =
                     <div className="text-center py-8 opacity-50">-- Empty Cart --</div>
                 ) : (
                     cart.map((item, index) => (
-                        <div key={item.id || index} className="grid grid-cols-12 gap-1 text-[10px] mb-1 border-b border-dashed border-gray-300 pb-1">
+                        <div key={item.id || index} className="grid grid-cols-12 gap-1 text-[10px] mb-1 border-b border-dashed pb-1" style={{ borderColor: "#d1d5db" }}>
                             <div className="col-span-5 break-words font-semibold pr-1">{item.name}</div>
                             <div className="col-span-2 text-center">{item.quantity} {item.unit}</div>
                             <div className="col-span-2 text-right">{item.price}</div>
@@ -58,7 +62,7 @@ const BillTemplate = forwardRef(({ cart, subtotal, totalAmount, date, printing =
                 )}
             </div>
 
-            <div className={divider}></div>
+            <div className={divider} style={{ borderColor: "#000000" }}></div>
 
             {/* Footer Calculation */}
             <div className="flex flex-col gap-1 text-[12px]">
@@ -67,7 +71,7 @@ const BillTemplate = forwardRef(({ cart, subtotal, totalAmount, date, printing =
                     <span>{parseFloat(subtotal || 0).toFixed(2)}</span>
                 </div>
                 {/* GST implied or separate? User didn't specify, keeping simple */}
-                <div className="flex justify-between font-bold text-sm mt-2 border-t border-dashed border-black pt-2">
+                <div className="flex justify-between font-bold text-sm mt-2 border-t border-dashed pt-2" style={{ borderColor: "#000000" }}>
                     <span>TOTAL:</span>
                     <span>Rs {parseFloat(totalAmount || 0).toFixed(2)}</span>
                 </div>
@@ -76,7 +80,7 @@ const BillTemplate = forwardRef(({ cart, subtotal, totalAmount, date, printing =
                 </div>
             </div>
 
-            <div className={divider}></div>
+            <div className={divider} style={{ borderColor: "#000000" }}></div>
 
             {/* Footer Message */}
             <div className="text-center mt-4">
@@ -89,7 +93,7 @@ const BillTemplate = forwardRef(({ cart, subtotal, totalAmount, date, printing =
 
             {/* Barcode Mockup */}
             <div className="mt-4 flex justify-center">
-                <div className="h-8 w-2/3 bg-black opacity-20"></div> {/* Placeholder for barcode */}
+                <div className="h-8 w-2/3 bg-black opacity-20" style={{ backgroundColor: "#000000" }}></div> {/* Placeholder for barcode */}
             </div>
         </div >
     );

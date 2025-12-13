@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 import { useNavigate } from "react-router-dom";
 import HistoryModal from "../components/HistoryModal";
+import PageTransition from "../components/PageTransition";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -37,9 +38,20 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="flex h-screen bg-[var(--color-brand-black)] text-[var(--color-brand-text)] font-sans overflow-hidden">
+    <PageTransition className="flex h-screen bg-[var(--color-brand-black)] text-[var(--color-brand-text)] font-sans overflow-hidden">
       <Sidebar />
-      <main className="flex-1 p-8 overflow-y-auto relative bg-[var(--color-brand-black)]">
+      <main className="flex-1 p-8 overflow-y-auto w-full relative bg-[var(--color-brand-black)]">
+        {/* Colorful Aurora Background */}
+        <div className="absolute inset-0 opacity-40 blur-3xl pointer-events-none animate-aurora"
+          style={{
+            backgroundSize: "200% 200%",
+            backgroundImage: `
+                 radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.4), transparent 25%), 
+                 radial-gradient(circle at 85% 30%, rgba(124, 58, 237, 0.4), transparent 25%), 
+                 radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.2), transparent 50%)
+               `
+          }}
+        ></div>
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-soft-light pointer-events-none"></div>
 
         <header className="flex justify-between items-center mb-10 relative z-10">
@@ -122,7 +134,7 @@ export default function Dashboard() {
 
         <HistoryModal isOpen={showHistory} onClose={() => setShowHistory(false)} />
       </main>
-    </div>
+    </PageTransition>
   );
 }
 

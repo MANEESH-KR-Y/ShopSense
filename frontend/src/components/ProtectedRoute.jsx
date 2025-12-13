@@ -10,9 +10,10 @@ export default function ProtectedRoute({ children }) {
   }
 
   // Token still undefined? Try again (prevents instant redirect)
-  if (!isAuthenticated && !window.__accessToken) {
+  // REMOVED: broken check that causes infinite stuck state
+  /* if (!isAuthenticated && !window.__accessToken) {
     return <div>Restoring session...</div>;
-  }
+  } */
 
   // If still not authenticated, redirect
   if (!isAuthenticated) {

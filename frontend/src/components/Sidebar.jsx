@@ -15,24 +15,24 @@ export default function Sidebar() {
 
   return (
 
-    <aside className="w-64 bg-[var(--color-brand-surface)] border-r border-[var(--color-brand-border)] flex flex-col h-full z-20 relative">
-      <div className="p-8 border-b border-[var(--color-brand-border)]">
-        <h1 className="text-2xl font-bold text-white tracking-wide">
-          Shop<span className="text-[var(--color-brand-blue)]">Sense</span>
+    <aside className="w-64 glass-panel border-r-0 m-4 rounded-[var(--radius-card)] flex flex-col z-20 relative overflow-hidden backdrop-blur-2xl">
+      <div className="p-8 border-b border-white/10">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-[var(--color-brand-blue)] bg-clip-text text-transparent tracking-wide">
+          ShopSense
         </h1>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-2">
         {links.map((link) => {
           const isActive = location.pathname === link.path;
           return (
             <Link
               key={link.path}
               to={link.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all font-medium text-sm
+              className={`flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all font-bold text-sm tracking-wide
                 ${isActive
-                  ? "bg-[var(--color-brand-blue)] text-white shadow-md shadow-orange-900/10"
-                  : "text-[var(--color-brand-text-muted)] hover:bg-[var(--color-brand-surface)] hover:text-white"
+                  ? "bg-[var(--color-brand-blue)] text-white shadow-lg shadow-indigo-500/30 scale-105"
+                  : "text-[var(--color-brand-text-muted)] hover:bg-white/5 hover:text-white"
                 }`}
             >
               <span>{link.name}</span>
@@ -40,8 +40,6 @@ export default function Sidebar() {
           );
         })}
       </nav>
-
-
     </aside>
   );
 }

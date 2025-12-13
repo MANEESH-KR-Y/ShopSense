@@ -14,7 +14,7 @@ export const useVoice = () => {
         const recognition = new window.webkitSpeechRecognition();
         recognition.continuous = false; // We use auto-restart instead of native continuous for better compatibility
         recognition.interimResults = false;
-        recognition.lang = 'en-US';
+        recognition.lang = 'en-IN'; // Better support for Indian accents and mixed English/Hindi
 
         recognition.onstart = () => {
             setIsListening(true);

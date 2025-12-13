@@ -40,43 +40,49 @@ export default function Products() {
       <Sidebar />
       <main className="flex-1 p-8 overflow-y-auto bg-[var(--color-brand-black)] relative">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-soft-light pointer-events-none"></div>
-        <div className="relative z-10">
-          <div className="flex justify-between items-center mb-8 pb-4 border-b border-[var(--color-brand-border)]">
-            <h1 className="text-2xl font-bold text-white">
-              Product Inventory
+        <div className="relative z-10 max-w-7xl mx-auto">
+          <div className="flex justify-between items-center mb-8 pb-4 border-b border-white/10">
+            <h1 className="text-3xl font-bold text-white tracking-tight">
+              📦 Product Inventory
             </h1>
-
+            <button onClick={() => navigate('/inventory/add')} className="btn btn-primary">
+              + Add New Product
+            </button>
           </div>
 
-          <div className="bg-[var(--color-brand-black)] border border-[var(--color-brand-border)] rounded-lg overflow-hidden">
-            <table className="w-full text-left">
+          <div className="glass-panel overflow-hidden rounded-[var(--radius-card)] shadow-2xl">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[var(--color-brand-surface)] border-b border-[var(--color-brand-border)]">
-                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">Product Name</th>
-                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">Category</th>
-                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">Unit</th>
-                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">Stock</th>
-                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">Price</th>
-                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">Actions</th>
+                <tr className="bg-white/5 border-b border-white/10">
+                  <th className="text-left p-5 text-white/50 font-bold text-xs uppercase tracking-widest">Product Name</th>
+                  <th className="text-left p-5 text-white/50 font-bold text-xs uppercase tracking-widest">Category</th>
+                  <th className="text-left p-5 text-white/50 font-bold text-xs uppercase tracking-widest">Unit</th>
+                  <th className="text-left p-5 text-white/50 font-bold text-xs uppercase tracking-widest">Stock</th>
+                  <th className="text-left p-5 text-white/50 font-bold text-xs uppercase tracking-widest">Price</th>
+                  <th className="text-left p-5 text-white/50 font-bold text-xs uppercase tracking-widest text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--color-brand-border)]">
+              <tbody className="divide-y divide-white/5">
                 {products.map((p) => (
-                  <tr key={p.id} className="hover:bg-[var(--color-brand-surface-hover)] transition-colors">
-                    <td className="p-4">{p.name}</td>
-                    <td className="p-4">{p.category_name}</td>
-                    <td className="p-4 font-mono text-sm">{p.unit || 'pcs'}</td>
-                    <td className="p-4">{p.stock}</td>
-                    <td className="p-4">₹{Number(p.price).toFixed(2)}</td>
-                    <td className="p-4 flex space-x-2">
+                  <tr key={p.id} className="hover:bg-white/5 transition-colors group">
+                    <td className="p-5 font-bold text-white">{p.name}</td>
+                    <td className="p-5 text-white/70">{p.category_name}</td>
+                    <td className="p-5 font-mono text-xs text-white/50 bg-white/5 inline-block rounded my-4 ml-4 px-2 py-1">{p.unit || 'pcs'}</td>
+                    <td className="p-5">
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${p.stock < 10 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                        {p.stock} LEFT
+                      </span>
+                    </td>
+                    <td className="p-5 text-white font-medium">₹{Number(p.price).toFixed(2)}</td>
+                    <td className="p-5 flex justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => navigate(`/inventory/edit/${p.id}`)}
-                        className="text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)] font-bold text-sm transition-colors">
+                        className="btn btn-secondary py-1.5 px-3 text-xs">
                         Edit
                       </button>
                       <button
                         onClick={() => handleDelete(p.id)}
-                        className="text-red-500 hover:text-red-400 font-bold text-sm transition-colors">
+                        className="btn btn-danger py-1.5 px-3 text-xs">
                         Delete
                       </button>
                     </td>
@@ -85,8 +91,12 @@ export default function Products() {
               </tbody>
             </table>
             {products.length === 0 && (
-              <div className="p-12 text-center text-[var(--color-brand-text-muted)]">
-                No products found. Start by adding one.
+              <div className="p-16 text-center flex flex-col items-center text-[var(--color-brand-text-muted)]">
+                <span className="text-4xl mb-4 opacity-30">📦</span>
+                <p className="text-lg">No products found.</p>
+                <button onClick={() => navigate('/inventory/add')} className="mt-4 btn btn-primary">
+                  Create First Product
+                </button>
               </div>
             )}
           </div>

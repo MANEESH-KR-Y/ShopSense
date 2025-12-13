@@ -36,11 +36,8 @@ export const AuthProvider = ({ children }) => {
     const init = async () => {
       // Always try to refresh/get a token first to ensure we have one for API calls
       const refreshed = await tryRefresh();
-      if (!refreshed) {
-        setLoading(false);
-      } else {
-        setLoading(false);
-      }
+      // Regardless of success/fail, we stop loading
+      setLoading(false);
     };
 
     init();

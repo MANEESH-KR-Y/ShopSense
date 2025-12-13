@@ -33,9 +33,9 @@ export default function Analytics() {
         setError(null);
         console.log("Analyze clicked. Params:", { period, date, year, month });
         try {
-            const queryParams = new URLSearchParams({ period, date, year, month }).toString();
-            console.log("Fetching sales analysis with query:", queryParams);
-            const { data } = await authAPI.getSalesAnalysis(queryParams);
+            const params = { period, date, year, month };
+            console.log("Fetching sales analysis with params:", params);
+            const { data } = await authAPI.getSalesAnalysis(params);
             console.log("Sales Analysis Received:", data);
             setSalesData(data);
         } catch (err) {

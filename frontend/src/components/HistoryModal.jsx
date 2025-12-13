@@ -49,7 +49,7 @@ export default function HistoryModal({ isOpen, onClose }) {
             setPreviewImage(image);
         } catch (err) {
             console.error("Download failed", err);
-            alert("Failed to generate bill preview");
+            alert("Failed to generate bill preview: " + err.message);
         }
     };
 
@@ -139,15 +139,26 @@ export default function HistoryModal({ isOpen, onClose }) {
                                         </button>
                                     </div>
 
-                                    {/* The Template to Capture */}
-                                    <div className="w-[800px] transform scale-75 origin-top">
-                                        {/* Scale down for visibility, capture will use full res via html2canvas options if configured or by cloning */}
+                                    {/* The Template to View (Scaled) */}
+                                    <div className="w-[800px] transform scale-75 origin-top backdrop-brightness-125">
+                                        <BillTemplate
+                                            cart={selectedOrder.items || []}
+                                            subtotal={selectedOrder.total_amount}
+                                            totalAmount={selectedOrder.total_amount}
+                                            date={selectedOrder.created_at}
+                                            printing={true} // Show full receipt style even in preview
+                                        />
+                                    </div>
+
+                                    {/* Hidden Template for Capture (Clean, no transforms) */}
+                                    <div style={{ position: "absolute", top: 0, left: "-5000px", width: "400px", background: "white" }}>
                                         <BillTemplate
                                             ref={billRef}
                                             cart={selectedOrder.items || []}
                                             subtotal={selectedOrder.total_amount}
                                             totalAmount={selectedOrder.total_amount}
                                             date={selectedOrder.created_at}
+                                            printing={true}
                                         />
                                     </div>
                                 </>

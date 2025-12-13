@@ -6,7 +6,7 @@ import Sidebar from "../components/Sidebar";
 import Fuse from "fuse.js";
 import HistoryModal from "../components/HistoryModal";
 import BillTemplate from "../components/BillTemplate";
-import { useVoice } from "../hooks/useVoice";
+import { useVoiceContext } from "../contexts/VoiceContext"; // Updated import
 import Toast from "../components/Toast"; // Import Toast
 import { NLU } from "../utils/nlu";
 
@@ -27,8 +27,8 @@ function Billing() {
     const billRef = useRef(null);
     const { isOnline, addToQueue } = useSync();
 
-    // Voice Integration
-    const { text: voiceText, start: startVoice, stop: stopVoice, isListening } = useVoice();
+    // Voice Integration (Global Context)
+    const { text: voiceText, start: startVoice, stop: stopVoice, isListening, language, setLanguage } = useVoiceContext();
 
     const toggleVoice = () => {
         if (isListening) {
@@ -175,62 +175,73 @@ function Billing() {
     // --- EFFECTS ---
 
     // Voice NLU Effect
+    const lastProcessedText = useRef("");
+
     useEffect(() => {
-        if (!voiceText) return;
+        if (!voiceText || voiceText === lastProcessedText.current) return;
 
-        // Use NLU Engine with Error Boundary
-        try {
-            const { intent, term, product, quantity } = NLU.parse(voiceText, products);
+        // Mark as processed immediately to prevent loops
+        lastProcessedText.current = voiceText;
 
-            switch (intent) {
-                case 'checkout':
-                    handleCheckout();
-                    break;
-                case 'generate_bill':
-                    handleGenerateBill(cart, totalAmount, true);
-                    showToast("Generating Bill...", "info");
-                    break;
-                case 'add_to_cart':
-                    addToCart(product, quantity);
-                    showToast(`Added ${quantity} x ${product.name}`, 'success');
-                    setSearchTerm("");
-                    break;
-                case 'remove_from_cart': {
-                    const itemToRemove = cart.find(item => item.id === product.id);
-                    if (itemToRemove) {
-                        removeFromCart(product.id);
-                        showToast(`Removed ${product.name}`, 'info');
-                    } else {
-                        showToast(`${product.name} not in cart`, 'warning');
-                    }
-                    break;
-                }
-                case 'clear_cart':
-                    setCart([]);
-                    showToast("Cart Cleared", 'info');
-                    break;
-                case 'update_quantity': {
-                    const itemToUpdate = cart.find(item => item.id === product.id);
-                    if (itemToUpdate) {
-                        updateQuantity(product.id, quantity);
-                        showToast(`Updated ${product.name} to ${quantity}`, 'success');
-                    } else {
+        const processVoice = async () => {
+            // Use NLU Engine with Error Boundary
+            try {
+                // Now await the async NLU
+                const { intent, term, product, quantity } = await NLU.parse(voiceText, products);
+                console.log("NLU Processed:", intent, product?.name);
+
+                switch (intent) {
+                    case 'checkout':
+                        handleCheckout();
+                        break;
+                    case 'generate_bill':
+                        handleGenerateBill(cart, totalAmount, true); // cart is now fresh
+                        showToast("Generating Bill...", "info");
+                        break;
+                    case 'add_to_cart':
                         addToCart(product, quantity);
                         showToast(`Added ${quantity} x ${product.name}`, 'success');
+                        setSearchTerm("");
+                        break;
+                    case 'remove_from_cart': {
+                        const itemToRemove = cart.find(item => item.id === product.id);
+                        if (itemToRemove) {
+                            removeFromCart(product.id);
+                            showToast(`Removed ${product.name}`, 'info');
+                        } else {
+                            showToast(`${product.name} not in cart`, 'warning');
+                        }
+                        break;
                     }
-                    break;
+                    case 'clear_cart':
+                        setCart([]);
+                        showToast("Cart Cleared", 'info');
+                        break;
+                    case 'update_quantity': {
+                        const itemToUpdate = cart.find(item => item.id === product.id);
+                        if (itemToUpdate) {
+                            updateQuantity(product.id, quantity);
+                            showToast(`Updated ${product.name} to ${quantity}`, 'success');
+                        } else {
+                            addToCart(product, quantity);
+                            showToast(`Added ${quantity} x ${product.name}`, 'success');
+                        }
+                        break;
+                    }
+                    case 'search':
+                    default:
+                        setSearchTerm(term || voiceText);
+                        break;
                 }
-                case 'search':
-                default:
-                    setSearchTerm(term || voiceText);
-                    break;
+            } catch (err) {
+                console.error("NLU Parsing Failed:", err);
+                showToast("AI processing failed", "error");
             }
-        } catch (err) {
-            console.error("NLU Parsing Failed:", err);
-            showToast("Voice parsing failed", "error");
-        }
+        };
+
+        processVoice();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [voiceText, products]);
+    }, [voiceText, products, cart]); // Added cart to dependencies
 
     // Initial Fetch
     useEffect(() => {
@@ -291,48 +302,73 @@ function Billing() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto relative z-10">
                     {/* Search Panel */}
-                    <div className="bg-[var(--color-brand-surface)] border border-[var(--color-brand-border)] p-8 rounded-lg shadow-xl relative h-[600px] flex flex-col">
-                        <h2 className="text-2xl font-bold mb-6 text-white uppercase tracking-wider">Product Search</h2>
+                    <div className="glass-panel p-8 rounded-[var(--radius-card)] relative h-[600px] flex flex-col shadow-2xl">
+                        <h2 className="text-2xl font-bold mb-6 text-white uppercase tracking-wider flex items-center gap-2">
+                            🔎 Product Search
+                        </h2>
 
-                        <div className="mb-6 relative">
-                            <input
-                                autoFocus
-                                type="text"
-                                className="w-full bg-[var(--color-brand-black)] border border-[var(--color-brand-border)] text-white p-4 pr-12 rounded-lg text-lg focus:border-[var(--color-brand-blue)] focus:outline-none placeholder-gray-600"
-                                placeholder="Search by name..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
+                        <div className="mb-6 relative flex gap-2">
+                            <div className="relative flex-1">
+                                <input
+                                    autoFocus
+                                    type="text"
+                                    className="input-field"
+                                    placeholder={language === 'te-IN' ? "ఉత్పత్తిని శోధించండి..." : "Search by name..."}
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-brand-text-muted)] pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                </div>
+                                <button
+                                    onClick={toggleVoice}
+                                    className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all duration-200 ${isListening ? 'bg-red-500 text-white animate-pulse' : 'text-zinc-500 hover:text-white hover:bg-white/10'}`}
+                                    title={isListening ? "Stop Listening" : "Start Voice Search"}
+                                >
+                                    {isListening ? '🛑' : '🎤'}
+                                </button>
+                            </div>
+
+                            {/* Language Toggle */}
                             <button
-                                onClick={toggleVoice}
-                                className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all duration-300 ${isListening ? 'bg-red-600 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'text-gray-400 hover:text-white hover:bg-[var(--color-brand-border)]'}`}
-                                title={isListening ? "Stop Listening" : "Start Voice Search"}
+                                onClick={() => {
+                                    const newLang = language === 'en-IN' ? 'te-IN' : 'en-IN';
+                                    setLanguage(newLang);
+                                    showToast(newLang === 'te-IN' ? "Telugu Voice Enabled 🗣️" : "English Voice Enabled 🗣️", "success");
+                                }}
+                                className="px-4 rounded-lg border border-[#3f3f46] bg-[#27272a] text-white font-bold text-sm hover:bg-[#3f3f46] transition-colors flex flex-col items-center justify-center min-w-[80px]"
+                                title="Switch Language"
                             >
-                                {isListening ? '🛑' : '🎤'}
+                                <span className={`text-[10px] uppercase tracking-wider ${language === 'en-IN' ? 'text-blue-400' : 'text-zinc-500'}`}>ENG</span>
+                                <div className="w-8 h-4 bg-black/40 rounded-full relative mx-1 my-0.5 border border-white/10">
+                                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${language === 'te-IN' ? 'left-4 bg-orange-400' : 'left-0.5 bg-blue-400'}`}></div>
+                                </div>
+                                <span className={`text-[10px] uppercase tracking-wider ${language === 'te-IN' ? 'text-orange-400' : 'text-zinc-500'}`}>TEL</span>
                             </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
+                        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 p-1">
                             {/* Show all products if no search, or filtered results */}
                             {(searchTerm ? searchResults : products).map(product => (
                                 <div
                                     key={product.id}
                                     onClick={() => addToCart(product)}
-                                    className="p-4 bg-[var(--color-brand-black)]/50 border border-[var(--color-brand-border)] rounded-lg flex justify-between items-center cursor-pointer hover:bg-[var(--color-brand-blue)]/10 hover:border-[var(--color-brand-blue)] transition-all group"
+                                    className="p-4 bg-white/5 border border-white/5 rounded-xl flex justify-between items-center cursor-pointer hover:bg-[var(--color-brand-blue)]/20 hover:border-[var(--color-brand-blue)]/50 transition-all group active:scale-[0.98]"
                                 >
                                     <div>
-                                        <h3 className="font-bold text-white text-lg">{product.name} <span className="text-sm text-[var(--color-brand-text-muted)]">({product.unit || 'pcs'})</span></h3>
-                                        <p className="text-sm text-[var(--color-brand-text-muted)]">Stock: {product.stock}</p>
+                                        <h3 className="font-bold text-white text-lg">{product.name} <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full text-[var(--color-brand-text-muted)] ml-2">{product.unit || 'pcs'}</span></h3>
+                                        <p className="text-sm text-[var(--color-brand-text-muted)] mt-1">Available: {product.stock}</p>
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <span className="font-bold text-[var(--color-brand-blue)] text-xl">₹{product.price}</span>
-                                        <button className="w-8 h-8 rounded-full bg-[var(--color-brand-blue)] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity font-bold text-xl">+</button>
+                                        <button className="w-10 h-10 rounded-full bg-[var(--color-brand-blue)]/10 text-[var(--color-brand-blue)] group-hover:bg-[var(--color-brand-blue)] group-hover:text-white flex items-center justify-center transition-all font-bold text-xl shadow-lg shadow-indigo-500/10">+</button>
                                     </div>
                                 </div>
                             ))}
 
                             {searchTerm && searchResults.length === 0 && (
-                                <div className="text-center text-[var(--color-brand-text-muted)] py-8">
+                                <div className="text-center text-[var(--color-brand-text-muted)] py-12 flex flex-col items-center">
+                                    <span className="text-4xl mb-2 opacity-50">🔍</span>
                                     No Match Found
                                 </div>
                             )}
@@ -342,62 +378,87 @@ function Billing() {
                     {/* Cart Section */}
                     <div className="flex flex-col h-[600px] relative">
                         {/* Interactive Cart UI */}
-                        <div className="bg-[var(--color-brand-surface)] border border-[var(--color-brand-border)] p-8 rounded-lg shadow-xl flex flex-col h-full z-10">
+                        <div className="glass-panel p-8 rounded-[var(--radius-card)] flex flex-col h-full z-10 shadow-2xl">
                             <h2 className="text-2xl font-bold mb-6 text-white flex justify-between items-center uppercase tracking-wider">
                                 Current Order
-                                <span className="text-sm font-bold bg-[var(--color-brand-blue)] text-white px-3 py-1 rounded-md">{cart.length} Items</span>
+                                <span className="text-xs font-bold bg-[var(--color-brand-blue)] text-white px-3 py-1.5 rounded-full">{cart.length} Items</span>
                             </h2>
 
                             <div className="flex-1 overflow-y-auto mb-6 pr-2 space-y-3 custom-scrollbar">
                                 {cart.length === 0 ? (
-                                    <div className="h-full flex flex-col items-center justify-center text-[var(--color-brand-text-muted)] border-2 border-dashed border-[var(--color-brand-border)] rounded-md">
-                                        <span className="text-4xl mb-2">🛒</span>
-                                        <p className="uppercase font-bold">Cart is empty</p>
+                                    <div className="h-full flex flex-col items-center justify-center text-[var(--color-brand-text-muted)] border-2 border-dashed border-white/10 rounded-2xl">
+                                        <span className="text-6xl mb-4 bg-gradient-to-br from-gray-700 to-transparent bg-clip-text text-transparent">🛒</span>
+                                        <p className="uppercase font-bold tracking-widest text-sm">Cart is empty</p>
+                                        <p className="text-xs opacity-50 mt-2">Add items to start billing</p>
                                     </div>
                                 ) : (
                                     cart.map(item => (
-                                        <div key={item.id} className="flex justify-between items-center bg-[var(--color-brand-black)] p-4 border border-[var(--color-brand-border)] rounded-md hover:border-[var(--color-brand-blue)] transition-colors">
+                                        <div key={item.id} className="flex justify-between items-center bg-black/20 p-4 border border-white/5 rounded-2xl hover:border-white/20 transition-colors group">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 bg-[var(--color-brand-blue)]/20 text-[var(--color-brand-blue)] flex items-center justify-center font-bold rounded-full">
+                                                <div className="w-12 h-12 bg-gradient-to-br from-[var(--color-brand-blue)] to-purple-600 text-white flex items-center justify-center font-bold rounded-xl shadow-lg shadow-indigo-500/20">
                                                     {item.name.charAt(0)}
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-bold text-white uppercase">{item.name}</h4>
-                                                    <p className="text-sm text-[var(--color-brand-text-muted)]">₹{item.price} / {item.unit || 'pcs'}</p>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-5 h-5 bg-gray-700 rounded text-xs text-white hover:bg-gray-600">-</button>
-                                                        <span className="text-sm text-white font-mono w-4 text-center">{item.quantity}</span>
-                                                        <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-5 h-5 bg-gray-700 rounded text-xs text-white hover:bg-gray-600">+</button>
-                                                    </div>
+                                                    <h4 className="font-bold text-white text-lg">{item.name}</h4>
+                                                    <p className="text-sm text-[var(--color-brand-text-muted)]">₹{item.price} × {item.quantity}{item.unit}</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-4">
-                                                <span className="font-bold text-[var(--color-brand-blue)] text-lg">₹{(item.price * item.quantity).toFixed(2)}</span>
-                                                <button onClick={() => removeFromCart(item.id)} className="w-8 h-8 flex items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-full transition-all font-bold">
-                                                    ×
-                                                </button>
+                                            <div className="flex items-center gap-6">
+                                                <div className="flex items-center bg-black/40 rounded-lg p-1 border border-white/10">
+                                                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-8 h-8 rounded-md text-white hover:bg-white/10 flex items-center justify-center font-bold text-lg">-</button>
+                                                    <span className="text-white font-mono w-8 text-center font-bold">{item.quantity}</span>
+                                                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-8 h-8 rounded-md text-white hover:bg-white/10 flex items-center justify-center font-bold text-lg">+</button>
+                                                </div>
+
+                                                <div className="flex flex-col items-end min-w-[80px]">
+                                                    <span className="font-bold text-white text-lg">₹{(item.price * item.quantity).toFixed(2)}</span>
+                                                    <button onClick={() => removeFromCart(item.id)} className="text-red-400 hover:text-red-300 text-xs font-bold uppercase hover:underline mt-1">
+                                                        Remove
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     ))
                                 )}
                             </div>
 
-                            <div className="bg-[var(--color-brand-black)] p-6 border-t border-[var(--color-brand-border)] rounded-b-lg">
-                                <div className="space-y-2 mb-4">
-                                    <div className="flex justify-between text-[var(--color-brand-text-muted)] text-sm uppercase">
+                            <div className="bg-black/20 -mx-8 -mb-8 p-8 border-t border-white/10 rounded-b-[var(--radius-card)]">
+                                <div className="space-y-3 mb-6">
+                                    <div className="flex justify-between text-[var(--color-brand-text-muted)] text-sm uppercase font-medium tracking-wide">
                                         <span>Subtotal</span>
                                         <span>₹{subtotal.toFixed(2)}</span>
                                     </div>
+                                    <div className="flex justify-between text-[var(--color-brand-text-muted)] text-sm uppercase font-medium tracking-wide">
+                                        <span>Tax (0%)</span>
+                                        <span>₹0.00</span>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between text-2xl font-bold mb-6 text-white uppercase border-t border-[var(--color-brand-border)] pt-4">
+                                <div className="flex justify-between text-3xl font-bold text-white tracking-tight">
                                     <span>Total</span>
-                                    <span className="text-[var(--color-brand-blue)]">₹{totalAmount.toFixed(2)}</span>
+                                    <span className="bg-gradient-to-r from-white to-[var(--color-brand-blue)] bg-clip-text text-transparent">₹{totalAmount.toFixed(2)}</span>
                                 </div>
+
+                                <button
+                                    onClick={handleCheckout}
+                                    disabled={cart.length === 0}
+                                    className="w-full mt-8 btn btn-primary py-4 text-base tracking-widest uppercase disabled:opacity-50 disabled:grayscale"
+                                >
+                                    Confirm Payment
+                                </button>
+
+                                {cart.length > 0 && (
+                                    <button
+                                        onClick={() => handleGenerateBill(cart, totalAmount)}
+                                        className="w-full mt-3 btn btn-secondary py-3 text-xs tracking-widest uppercase"
+                                    >
+                                        Preview Bill
+                                    </button>
+                                )}
                             </div>
                         </div>
 
                         {/* Hidden Template for Generation ONLY */}
-                        <div style={{ position: "fixed", top: 0, left: "-1000px", width: "400px", zIndex: -1000, pointerEvents: "none", opacity: 0 }}>
+                        <div style={{ position: "absolute", top: 0, left: "-5000px", width: "400px", background: "white" }}>
                             <BillTemplate
                                 ref={billRef}
                                 cart={billData.cart}
@@ -407,34 +468,17 @@ function Billing() {
                             />
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="mt-4 grid gap-3">
-                            <button
-                                onClick={handleCheckout}
-                                disabled={cart.length === 0}
-                                className="w-full py-4 bg-[var(--color-brand-blue)] text-white font-bold text-lg hover:bg-[var(--color-brand-blue-hover)] transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase rounded-md shadow-lg shadow-indigo-900/20"
-                            >
-                                Complete Payment →
-                            </button>
-                            {cart.length > 0 && (
-                                <button
-                                    onClick={() => handleGenerateBill(cart, totalAmount)}
-                                    className="w-full py-3 bg-[var(--color-brand-surface)] border border-[var(--color-brand-border)] text-[var(--color-brand-text)] font-bold text-sm hover:bg-[var(--color-brand-border)] transition-all uppercase rounded-md"
-                                >
-                                    Preview & Download Bill 📸
-                                </button>
-                            )}
-
-                            {/* Download Last Bill Button (Visible after checkout) */}
-                            {cart.length === 0 && lastOrder && (
+                        {/* Download Last Bill Button (Visible after checkout) */}
+                        {cart.length === 0 && lastOrder && (
+                            <div className="absolute top-2 right-2 left-2 z-20">
                                 <button
                                     onClick={() => handleGenerateBill(lastOrder.items, lastOrder.total, true)}
-                                    className="w-full py-3 bg-green-900/20 border border-green-500/50 text-green-400 font-bold text-sm hover:bg-green-900/40 transition-all uppercase rounded-md animate-in fade-in slide-in-from-top-2"
+                                    className="w-full py-3 bg-green-500/20 border border-green-500/30 backdrop-blur-md text-green-400 font-bold text-sm hover:bg-green-500/30 transition-all uppercase rounded-xl animate-in fade-in slide-in-from-top-4 shadow-lg"
                                 >
                                     Download Last Bill 🧾
                                 </button>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 

@@ -1,15 +1,28 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-black: #000000;
-  --color-brand-surface: #111111;
-  --color-brand-border: #333333;
-  --color-brand-text: #ffffff;
-  --color-brand-text-muted: #9ca3af;
+  /* Warm Matte Palette */
+  --color-brand-black: #18181b;
+  /* Zinc 900 */
+  --color-brand-surface: #27272a;
+  /* Zinc 800 (Solid/Matte) */
+  --color-brand-border: #3f3f46;
+  /* Zinc 700 */
+
+  --color-brand-text: #f4f4f5;
+  /* Zinc 100 */
+  --color-brand-text-muted: #a1a1aa;
+  /* Zinc 400 */
+
+  /* Human Accent */
   --color-brand-blue: #3b82f6;
+  /* Standard Blue (Matte) */
   --color-brand-blue-hover: #2563eb;
 
   --font-sans: 'Inter', sans-serif;
+  --radius-pill: 9999px;
+  --radius-card: 1rem;
+  /* Tighter radius for physical feel */
 }
 
 /* Custom Base Styles */
@@ -20,31 +33,12 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
+    selection-background-color: var(--color-brand-blue);
+    selection-color: white;
   }
 }
 
-/* Custom Utilities */
-@utility input-field {
-  @apply w-full bg-[var(--color-brand-surface)] border border-[var(--color-brand-border)] rounded-md px-4 py-3 text-white focus:outline-none focus:border-[var(--color-brand-blue)] transition-colors placeholder-[var(--color-brand-text-muted)]/50;
-}
-
-@utility btn {
-  @apply px-4 py-2 rounded font-semibold transition-all duration-200 cursor-pointer text-center;
-}
-
-@utility btn-primary {
-  @apply bg-[var(--color-brand-blue)] text-white hover:bg-[var(--color-brand-blue-hover)] border border-transparent shadow-lg shadow-indigo-900/20;
-}
-
-@utility btn-danger {
-  @apply bg-red-600 text-white hover:bg-red-700 border border-transparent;
-}
-
-@utility card {
-  @apply bg-[var(--color-brand-surface)] p-6 rounded-xl border border-[var(--color-brand-border)] shadow-xl;
-}
-
-/* Animations */
+/* Animations - Subtle Fade Only */
 @keyframes fade-in-up {
   0% {
     opacity: 0;
@@ -58,46 +52,91 @@
 }
 
 @utility animate-fade-in-up {
-  animation: fade-in-up 0.5s ease-out forwards;
+  animation: fade-in-up 0.4s ease-out forwards;
 }
 
-/* Scrollbar */
+/* --- Tactile & Matte Components --- */
+
+@utility glass-panel {
+  @apply bg-[#27272a] border border-[#3f3f46] shadow-xl;
+  /* Solid Matte */
+}
+
+/* Inputs: Physical, Deep, Matte */
+@utility input-field {
+  @apply w-full bg-[#18181b] border border-[#3f3f46] rounded-lg px-4 py-3 text-white transition-all outline-none;
+  @apply placeholder-zinc-500;
+  @apply focus:border-blue-500 focus:ring-1 focus:ring-blue-500;
+  @apply pl-12;
+  /* Default padding for icons, can be overridden */
+}
+
+/* Buttons: Tactile, Physical, No Neon */
+@utility btn {
+  @apply px-5 py-2.5 rounded-lg font-bold text-sm tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 select-none;
+  @apply active:scale-[0.98] active:translate-y-0.5;
+}
+
+@utility btn-primary {
+  @apply bg-blue-600 text-white shadow-lg shadow-black/20;
+  @apply hover:bg-blue-500;
+  @apply border-b-4 border-blue-800;
+  /* Physical Tactile Ridge */
+  @apply active:border-b-0 active:mt-1;
+  /* Click effect */
+}
+
+@utility btn-secondary {
+  @apply bg-[#3f3f46] text-white shadow-md shadow-black/20;
+  @apply hover:bg-[#52525b];
+  @apply border-b-4 border-[#27272a];
+  @apply active:border-b-0 active:mt-1;
+}
+
+@utility btn-danger {
+  @apply bg-red-600 text-white shadow-lg shadow-black/20;
+  @apply hover:bg-red-500;
+  @apply border-b-4 border-red-800;
+  @apply active:border-b-0 active:mt-1;
+}
+
+/* Cards: Matte Surface */
+@utility card {
+  @apply bg-[#27272a] border border-[#3f3f46] p-6 rounded-xl shadow-xl shadow-black/40 relative overflow-hidden;
+}
+
+/* Scrollbar - Matte */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-brand-black);
+  background: #18181b;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-brand-border);
+  background: #3f3f46;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-brand-text-muted);
+  background: #52525b;
 }
 
+/* Compatibility */
 .btn-primary {
-  @apply bg-[var(--color-brand-blue)] text-white hover:bg-[var(--color-brand-blue-hover)] shadow-lg shadow-blue-900/20;
+  @apply btn btn-primary;
 }
 
 .btn-secondary {
-  @apply bg-[var(--color-brand-surface)] border border-[var(--color-brand-border)] text-[var(--color-brand-text)] hover:bg-[var(--color-brand-border)];
+  @apply btn btn-secondary;
 }
 
-.btn-danger {
-  @apply bg-red-900/20 border border-red-900/50 text-red-400 hover:bg-red-900/30;
-}
-
-/* Card Utility */
 .card {
-  @apply bg-[var(--color-brand-black)] border border-[var(--color-brand-border)] rounded-lg p-6;
+  @apply card;
 }
 
-/* Input Utility */
 .input-field {
-  @apply w-full bg-[var(--color-brand-border)] border border-[var(--color-brand-text-muted)] rounded-md px-4 py-3 text-[var(--color-brand-text)] focus:ring-2 focus:ring-[var(--color-brand-blue)] focus:border-transparent outline-none transition-all placeholder-gray-500;
+  @apply input-field;
 }
