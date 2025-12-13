@@ -34,6 +34,8 @@ module.exports = [
             'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
             'react/prop-types': 'off',
             'no-unused-vars': 'warn',
+            'no-empty': 'warn',
+            'react-hooks/exhaustive-deps': 'warn',
         },
     },
 ];

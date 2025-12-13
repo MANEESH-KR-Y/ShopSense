@@ -1,8 +1,6 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 
 const BillTemplate = forwardRef(({ cart, subtotal, totalAmount, date, printing = false }, ref) => {
-  // Helper for centering text in mono
-  const center = 'text-center';
   const divider = 'border-t border-dashed border-black my-2';
 
   return (
@@ -97,5 +95,7 @@ const BillTemplate = forwardRef(({ cart, subtotal, totalAmount, date, printing =
     </div>
   );
 });
+
+BillTemplate.displayName = 'BillTemplate';
 
 export default BillTemplate;

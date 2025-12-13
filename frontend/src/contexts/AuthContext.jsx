@@ -1,11 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [accessToken, setAccessToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // --------------------------
@@ -17,7 +16,6 @@ export const AuthProvider = ({ children }) => {
       const newToken = res.data.accessToken;
 
       window.__accessToken = newToken;
-      setAccessToken(newToken);
 
       // Now load user
       const me = await authAPI.getCurrentUser();
@@ -56,7 +54,6 @@ export const AuthProvider = ({ children }) => {
       const token = res.data.accessToken;
 
       window.__accessToken = token;
-      setAccessToken(token);
       setUser(res.data.user);
 
       return { success: true };
@@ -92,10 +89,11 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await authAPI.logout();
-    } catch { }
+    } catch {
+      // Ignore logout errors
+    }
 
     window.__accessToken = null;
-    setAccessToken(null);
     setUser(null);
   };
 
@@ -105,7 +103,6 @@ export const AuthProvider = ({ children }) => {
       const token = res.data.accessToken;
 
       window.__accessToken = token;
-      setAccessToken(token);
       setUser(res.data.user);
 
       return { success: true };

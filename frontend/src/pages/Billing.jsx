@@ -45,9 +45,7 @@ function Billing() {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + qty }
-            : item
+          item.id === product.id ? { ...item, quantity: item.quantity + qty } : item
         );
       }
       return [...prev, { ...product, quantity: qty }];
@@ -199,7 +197,7 @@ function Billing() {
           showToast(`Added ${quantity} x ${product.name}`, 'success');
           setSearchTerm('');
           break;
-        case 'remove_from_cart':
+        case 'remove_from_cart': {
           const itemToRemove = cart.find((item) => item.id === product.id);
           if (itemToRemove) {
             removeFromCart(product.id);
@@ -208,11 +206,12 @@ function Billing() {
             showToast(`${product.name} not in cart`, 'warning');
           }
           break;
+        }
         case 'clear_cart':
           setCart([]);
           showToast('Cart Cleared', 'info');
           break;
-        case 'update_quantity':
+        case 'update_quantity': {
           const itemToUpdate = cart.find((item) => item.id === product.id);
           if (itemToUpdate) {
             updateQuantity(product.id, quantity);
@@ -222,13 +221,13 @@ function Billing() {
             showToast(`Added ${quantity} x ${product.name}`, 'success');
           }
           break;
+        }
         case 'search':
         default:
           setSearchTerm(term || voiceText);
           break;
       }
-    } catch (err) {
-      console.error('NLU Parsing Failed:', err);
+    } catch {
       showToast('Voice parsing failed', 'error');
     }
   }, [voiceText, products]);
