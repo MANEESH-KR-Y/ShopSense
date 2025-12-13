@@ -1,5 +1,5 @@
-const db = require("../db");
-const bcrypt = require("bcryptjs");
+const db = require('../db');
+const bcrypt = require('bcryptjs');
 
 class User {
   static async create({ name, email, phone, password }) {
@@ -18,16 +18,12 @@ class User {
   }
 
   static async findByEmail(email) {
-    const result = await db.query(`SELECT * FROM users WHERE email = $1`, [
-      email,
-    ]);
+    const result = await db.query(`SELECT * FROM users WHERE email = $1`, [email]);
     return result.rows[0];
   }
 
   static async findByPhone(phone) {
-    const result = await db.query(`SELECT * FROM users WHERE phone = $1`, [
-      phone,
-    ]);
+    const result = await db.query(`SELECT * FROM users WHERE phone = $1`, [phone]);
     return result.rows[0];
   }
 
@@ -40,17 +36,14 @@ class User {
   }
 
   static async updateRefreshToken(id, token) {
-    await db.query(
-      `UPDATE users SET refresh_token=$1, updated_at=CURRENT_TIMESTAMP WHERE id=$2`,
-      [token, id]
-    );
+    await db.query(`UPDATE users SET refresh_token=$1, updated_at=CURRENT_TIMESTAMP WHERE id=$2`, [
+      token,
+      id,
+    ]);
   }
 
   static async findByRefreshToken(refreshToken) {
-    const result = await db.query(
-      `SELECT * FROM users WHERE refresh_token=$1`,
-      [refreshToken]
-    );
+    const result = await db.query(`SELECT * FROM users WHERE refresh_token=$1`, [refreshToken]);
     return result.rows[0];
   }
 

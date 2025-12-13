@@ -1,5 +1,5 @@
-const Product = require("../models/Product");
-const Inventory = require("../models/Inventory");
+const Product = require('../models/Product');
+const Inventory = require('../models/Inventory');
 
 class ProductService {
   static async createProduct(data) {

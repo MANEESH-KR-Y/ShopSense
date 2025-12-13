@@ -1,4 +1,4 @@
-const db = require("../db");
+const db = require('../db');
 
 class Product {
   static async create({ name, categoryId, price, stock, unit, userId }) {
@@ -23,7 +23,10 @@ class Product {
   }
 
   static async findById(id, userId) {
-    const result = await db.query(`SELECT * FROM products WHERE id = $1 AND user_id = $2 AND is_deleted = FALSE`, [id, userId]);
+    const result = await db.query(
+      `SELECT * FROM products WHERE id = $1 AND user_id = $2 AND is_deleted = FALSE`,
+      [id, userId]
+    );
     return result.rows[0];
   }
 
@@ -36,7 +39,10 @@ class Product {
 
   static async delete(id, userId) {
     // Soft delete
-    await db.query(`UPDATE products SET is_deleted = TRUE WHERE id=$1 AND user_id=$2`, [id, userId]);
+    await db.query(`UPDATE products SET is_deleted = TRUE WHERE id=$1 AND user_id=$2`, [
+      id,
+      userId,
+    ]);
   }
 }
 

@@ -1,4 +1,4 @@
-const InventoryService = require("../services/inventoryService");
+const InventoryService = require('../services/inventoryService');
 
 exports.updateStock = async (req, res) => {
   try {
@@ -6,8 +6,8 @@ exports.updateStock = async (req, res) => {
     const stock = await InventoryService.updateStock(productId, quantity);
     res.json({ stock });
   } catch (err) {
-    console.error("Inventory update error:", err);
-    res.status(500).json({ error: "Failed to update stock" });
+    console.error('Inventory update error:', err);
+    res.status(500).json({ error: 'Failed to update stock' });
   }
 };
 
@@ -17,6 +17,6 @@ exports.getStock = async (req, res) => {
     const stock = await InventoryService.getStock(productId);
     res.json({ stock });
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch stock" });
+    res.status(500).json({ error: 'Failed to fetch stock' });
   }
 };

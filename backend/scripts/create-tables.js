@@ -2,7 +2,7 @@ const db = require('../db');
 
 async function createTables() {
   try {
-    console.log("Starting migration...");
+    console.log('Starting migration...');
 
     // Users Table
     await db.query(`
@@ -17,7 +17,7 @@ async function createTables() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    console.log("- Users table checked/created");
+    console.log('- Users table checked/created');
 
     // Categories Table
     await db.query(`
@@ -26,7 +26,7 @@ async function createTables() {
         name VARCHAR(255) UNIQUE NOT NULL
       );
     `);
-    console.log("- Categories table checked/created");
+    console.log('- Categories table checked/created');
 
     // Products Table
     await db.query(`
@@ -38,7 +38,7 @@ async function createTables() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    console.log("- Products table checked/created");
+    console.log('- Products table checked/created');
 
     // Inventory Table
     await db.query(`
@@ -49,7 +49,7 @@ async function createTables() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    console.log("- Inventory table checked/created");
+    console.log('- Inventory table checked/created');
 
     // Orders Table
     await db.query(`
@@ -61,7 +61,7 @@ async function createTables() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    console.log("- Orders table checked/created");
+    console.log('- Orders table checked/created');
 
     // Order Items Table
     await db.query(`
@@ -73,12 +73,12 @@ async function createTables() {
         price DECIMAL(10, 2) NOT NULL
       );
     `);
-    console.log("- Order Items table checked/created");
+    console.log('- Order Items table checked/created');
 
-    console.log("Migration completed successfully.");
+    console.log('Migration completed successfully.');
     process.exit(0);
   } catch (error) {
-    console.error("Migration failed:", error);
+    console.error('Migration failed:', error);
     process.exit(1);
   }
 }

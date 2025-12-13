@@ -1,18 +1,16 @@
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 class JWTUtils {
   static generateAccessToken(user) {
-    return jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "15m" }
-    );
+    return jwt.sign({ id: user.id, email: user.email }, process.env.ACCESS_TOKEN_SECRET, {
+      expiresIn: '15m',
+    });
   }
 
   static generateRefreshToken(user) {
     return jwt.sign({ id: user.id }, process.env.REFRESH_TOKEN_SECRET, {
-      expiresIn: "7d",
+      expiresIn: '7d',
     });
   }
 

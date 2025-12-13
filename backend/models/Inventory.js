@@ -1,11 +1,8 @@
-const db = require("../db");
+const db = require('../db');
 
 class Inventory {
   static async getStock(productId) {
-    const res = await db.query(
-      `SELECT * FROM inventory WHERE product_id = $1`,
-      [productId]
-    );
+    const res = await db.query(`SELECT * FROM inventory WHERE product_id = $1`, [productId]);
     return res.rows[0];
   }
 

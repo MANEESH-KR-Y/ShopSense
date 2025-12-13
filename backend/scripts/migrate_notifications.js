@@ -1,8 +1,8 @@
 const db = require('../db');
 
 async function migrate() {
-    try {
-        await db.query(`
+  try {
+    await db.query(`
             CREATE TABLE IF NOT EXISTS notifications (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER NOT NULL REFERENCES users(id),
@@ -13,12 +13,12 @@ async function migrate() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log("Notifications table created successfully.");
-        process.exit(0);
-    } catch (err) {
-        console.error("Migration failed:", err);
-        process.exit(1);
-    }
+    console.log('Notifications table created successfully.');
+    process.exit(0);
+  } catch (err) {
+    console.error('Migration failed:', err);
+    process.exit(1);
+  }
 }
 
 migrate();

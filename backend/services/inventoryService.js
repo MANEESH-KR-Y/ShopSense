@@ -1,4 +1,4 @@
-const Inventory = require("../models/Inventory");
+const Inventory = require('../models/Inventory');
 
 class InventoryService {
   static async updateStock(productId, quantity) {
