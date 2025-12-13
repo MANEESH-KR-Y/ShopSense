@@ -8,11 +8,9 @@ export default [
     files: ["src/**/*.{js,jsx}"],
 
     languageOptions: {
-      parser: "@babel/eslint-parser",
       parserOptions: {
-        requireConfigFile: false,
-        babelOptions: {
-          presets: ["@babel/preset-react"],
+        ecmaFeatures: {
+          jsx: true,
         },
       },
       ecmaVersion: "latest",
