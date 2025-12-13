@@ -1,21 +1,22 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import Login from './pages/Login';
-import ForgotPassword from './pages/ForgotPassword';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import Products from './pages/inventory/Products';
-import AddProduct from './pages/inventory/AddProduct';
-import UpdateStock from './pages/inventory/UpdateStock';
-import EditProduct from './pages/inventory/EditProduct';
-import Billing from './pages/Billing';
-import Profile from './pages/Profile';
-import Analytics from './pages/Analytics';
-import GstReport from './pages/analytics/GstReport';
-import { SyncProvider } from './contexts/SyncContext';
-import NetworkStatus from './components/NetworkStatus';
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import Products from "./pages/inventory/Products";
+import AddProduct from "./pages/inventory/AddProduct";
+import UpdateStock from "./pages/inventory/UpdateStock";
+import EditProduct from "./pages/inventory/EditProduct";
+import Billing from "./pages/Billing";
+import Profile from "./pages/Profile";
+import Analytics from "./pages/Analytics";
+import GstReport from "./pages/analytics/GstReport";
+import { SyncProvider } from "./contexts/SyncContext";
+import NetworkStatus from "./components/NetworkStatus";
+
 
 export default function App() {
   return (

@@ -1,31 +1,12 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../services/api';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { authAPI } from "../services/api";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [accessToken, setAccessToken] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // --------------------------
-  // Refresh access token
-  // --------------------------
-  const tryRefresh = async () => {
-    try {
-      const res = await authAPI.refresh();
-      const newToken = res.data.accessToken;
-
-      window.__accessToken = newToken;
-
-      // Now load user
-      const me = await authAPI.getCurrentUser();
-      setUser(me.data.user);
-
-      return true;
-    } catch {
-      return false;
-    }
-  };
 
   // --------------------------
   // Load session on refresh
@@ -45,6 +26,27 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // --------------------------
+  // Refresh access token
+  // --------------------------
+  const tryRefresh = async () => {
+    try {
+      const res = await authAPI.refresh();
+      const newToken = res.data.accessToken;
+
+      window.__accessToken = newToken;
+      setAccessToken(newToken);
+
+      // Now load user
+      const me = await authAPI.getCurrentUser();
+      setUser(me.data.user);
+
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // --------------------------
   // Login
   // --------------------------
   const login = async (credentials) => {
@@ -54,13 +56,14 @@ export const AuthProvider = ({ children }) => {
       const token = res.data.accessToken;
 
       window.__accessToken = token;
+      setAccessToken(token);
       setUser(res.data.user);
 
       return { success: true };
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.error || 'Login failed',
+        error: err.response?.data?.error || "Login failed",
       };
     }
   };
@@ -78,7 +81,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.error || 'OTP Login failed',
+        error: err.response?.data?.error || "OTP Login failed"
       };
     }
   };
@@ -89,11 +92,10 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await authAPI.logout();
-    } catch {
-      // Ignore logout errors
-    }
+    } catch { }
 
     window.__accessToken = null;
+    setAccessToken(null);
     setUser(null);
   };
 
@@ -103,13 +105,14 @@ export const AuthProvider = ({ children }) => {
       const token = res.data.accessToken;
 
       window.__accessToken = token;
+      setAccessToken(token);
       setUser(res.data.user);
 
       return { success: true };
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.error || 'Registration failed',
+        error: err.response?.data?.error || "Registration failed",
       };
     }
   };

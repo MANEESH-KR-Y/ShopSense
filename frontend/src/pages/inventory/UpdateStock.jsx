@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { inventoryAPI, productAPI } from '../../services/inventoryApi';
-import { useNavigate, useParams } from 'react-router-dom';
-import Sidebar from '../../components/Sidebar';
+import React, { useEffect, useState } from "react";
+import { inventoryAPI, productAPI } from "../../services/inventoryApi";
+import { useNavigate, useParams } from "react-router-dom";
+import Sidebar from "../../components/Sidebar";
 
 export default function UpdateStock() {
   const { productId } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
-  const [quantity, setQuantity] = useState('');
+  const [quantity, setQuantity] = useState("");
   const [stockInfo, setStockInfo] = useState(null);
 
   useEffect(() => {
     if (productId) {
-      productAPI.getProducts().then((res) => {
-        const found = res.data.find((p) => p.id == productId);
+      productAPI.getProducts().then(res => {
+        const found = res.data.find(p => p.id == productId);
         setProduct(found);
       });
-      inventoryAPI.getStock(productId).then((res) => {
+      inventoryAPI.getStock(productId).then(res => {
         setStockInfo(res.data);
       });
     }
@@ -26,18 +26,13 @@ export default function UpdateStock() {
     e.preventDefault();
     try {
       await inventoryAPI.updateStock({ productId, quantity });
-      navigate('/inventory/products');
+      navigate("/inventory/products");
     } catch (err) {
-      console.error('Failed to update stock', err);
+      console.error("Failed to update stock", err);
     }
   };
 
-  if (!product)
-    return (
-      <div className="flex h-screen bg-[var(--color-brand-black)] text-white items-center justify-center">
-        Loading...
-      </div>
-    );
+  if (!product) return <div className="flex h-screen bg-[var(--color-brand-black)] text-white items-center justify-center">Loading...</div>;
 
   return (
     <div className="flex h-screen bg-[var(--color-brand-black)] text-[var(--color-brand-text)] font-sans overflow-hidden">
@@ -50,9 +45,7 @@ export default function UpdateStock() {
 
           <div className="bg-[var(--color-brand-surface)] p-6 rounded-lg mb-8 border border-[var(--color-brand-border)]">
             <h3 className="text-lg font-bold text-white mb-2">{product.name}</h3>
-            <p className="text-[var(--color-brand-text-muted)] text-sm mb-4">
-              Price: ₹{product.price}
-            </p>
+            <p className="text-[var(--color-brand-text-muted)] text-sm mb-4">Price: ₹{product.price}</p>
 
             <div className="flex items-center justify-between bg-[var(--color-brand-black)] p-3 rounded border border-[var(--color-brand-border)]">
               <span className="text-[var(--color-brand-text-muted)] text-sm">Current Stock</span>
@@ -64,9 +57,7 @@ export default function UpdateStock() {
 
           <form className="space-y-6" onSubmit={submit}>
             <div>
-              <label className="block text-sm font-medium text-[var(--color-brand-text-muted)] mb-2">
-                Set New Quantity
-              </label>
+              <label className="block text-sm font-medium text-[var(--color-brand-text-muted)] mb-2">Set New Quantity</label>
               <input
                 type="number"
                 required
@@ -77,7 +68,9 @@ export default function UpdateStock() {
               />
             </div>
 
-            <button className="w-full btn btn-primary py-3">Update Inventory</button>
+            <button className="w-full btn btn-primary py-3">
+              Update Inventory
+            </button>
           </form>
         </div>
       </main>
