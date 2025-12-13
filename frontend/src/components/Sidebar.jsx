@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import InstallPWA from "./InstallPWA";
 
 export default function Sidebar() {
   const location = useLocation();
@@ -22,7 +23,7 @@ export default function Sidebar() {
         </h1>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-2 text-md">
         {links.map((link) => {
           const isActive = location.pathname === link.path;
           return (
@@ -40,6 +41,11 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      {/* PWA Install Widget */}
+      <div className="p-4 mt-auto border-t border-white/10">
+        <InstallPWA />
+      </div>
     </aside>
   );
 }
