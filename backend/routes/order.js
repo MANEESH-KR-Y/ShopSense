@@ -11,6 +11,7 @@ router.post("/", auth.verifyToken, async (req, res) => {
 
         const { customerName, totalAmount, taxAmount, items } = req.body;
         const userId = req.userId;
+        const lowStockAlerts = [];
 
         // Create Order
         const orderRes = await client.query(
@@ -33,28 +34,53 @@ router.post("/", auth.verifyToken, async (req, res) => {
                 [order.id, item.productId, item.price, item.quantity]
             );
 
-            // Deduct Stock
-            await client.query(
-                `UPDATE products SET stock = stock - $1 WHERE id = $2 AND user_id = $3`,
+            // Deduct Stock and Check Level
+            const stockRes = await client.query(
+                `UPDATE products SET stock = stock - $1 WHERE id = $2 AND user_id = $3 RETURNING stock, name`,
                 [item.quantity, item.productId, userId]
             );
+
+            if (stockRes.rows.length > 0) {
+                const { stock, name } = stockRes.rows[0];
+                if (stock < 5) {
+                    lowStockAlerts.push({ name, stock });
+                }
+            }
         }
 
         await client.query('COMMIT');
         res.status(201).json(order);
 
-        // FIREBASE NOTIFICATION
+        // --- POST-ORDER NOTIFICATIONS ---
+
         const { sendNotification } = require("../services/firebaseService");
 
         // Fetch User's Device Token
         const userRes = await client.query("SELECT device_token FROM users WHERE id=$1", [userId]);
         const userToken = userRes.rows[0]?.device_token;
 
+        // 1. New Order Notification
         if (userToken) {
-            console.log(`Sending Notification to User ${userId}`);
             sendNotification(userToken, "New Order Received! 💰", `Order #${order.id} for ₹${totalAmount} has been placed.`);
-        } else {
-            console.log(`User ${userId} has no device token. Notification skipped.`);
+        }
+
+        // 2. Low Stock Alerts
+        if (lowStockAlerts.length > 0) {
+            for (const alert of lowStockAlerts) {
+                const title = `⚠️ Low Stock Alert: ${alert.name}`;
+                const message = `Only ${alert.stock} units remaining! Restock soon.`;
+
+                // Save to In-App Notifications
+                await client.query(`
+                    INSERT INTO notifications (user_id, title, message, type)
+                    VALUES ($1, $2, $3, 'alert')
+                 `, [userId, title, message]);
+
+                // Send Firebase Push
+                if (userToken) {
+                    sendNotification(userToken, title, message);
+                }
+            }
         }
 
     } catch (err) {
