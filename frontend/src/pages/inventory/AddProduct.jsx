@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { productAPI, inventoryAPI } from "../../services/inventoryApi";
-import { useNavigate } from "react-router-dom";
-import Sidebar from "../../components/Sidebar";
-
+import React, { useState, useEffect } from 'react';
+import { productAPI, inventoryAPI } from '../../services/inventoryApi';
+import { useNavigate } from 'react-router-dom';
+import Sidebar from '../../components/Sidebar';
 
 export default function AddProduct() {
   const navigate = useNavigate();
@@ -11,9 +10,8 @@ export default function AddProduct() {
   const [scannedItems, setScannedItems] = useState([]); // List of products to add
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   // Fetch Categories on Mount
   useEffect(() => {
@@ -25,33 +23,35 @@ export default function AddProduct() {
       const res = await inventoryAPI.getCategories();
       setCategories(res.data);
     } catch (err) {
-      console.error("Failed to fetch categories", err);
+      console.error('Failed to fetch categories', err);
     }
   };
 
   const handleItemChange = (id, field, value) => {
-    setScannedItems(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
+    setScannedItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    );
   };
 
   const removeItem = (id) => {
-    setScannedItems(prev => prev.filter(item => item.id !== id));
+    setScannedItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   const saveAll = async () => {
     setLoading(true);
-    setError("");
-    setSuccess("");
+    setError('');
+    setSuccess('');
 
     // Validate & Prepare
-    const itemsToSave = scannedItems.map(item => ({
+    const itemsToSave = scannedItems.map((item) => ({
       ...item,
-      categoryId: item.categoryId || (categories.length > 0 ? categories[0].id : 1)
+      categoryId: item.categoryId || (categories.length > 0 ? categories[0].id : 1),
     }));
 
-    const invalid = itemsToSave.find(i => !i.name || !i.price);
+    const invalid = itemsToSave.find((i) => !i.name || !i.price);
 
     if (invalid) {
-      setError("Please fill all fields (Name and Price are required).");
+      setError('Please fill all fields (Name and Price are required).');
       setLoading(false);
       return;
     }
@@ -64,14 +64,14 @@ export default function AddProduct() {
           price: parseFloat(item.price),
           stock: parseInt(item.stock || 0),
           categoryId: parseInt(item.categoryId),
-          unit: item.unit || 'pcs'
+          unit: item.unit || 'pcs',
         });
       }
-      setSuccess("All products saved successfully!");
+      setSuccess('All products saved successfully!');
       setTimeout(() => setScannedItems([]), 1000); // Clear list
     } catch (err) {
       console.error(err);
-      setError("Failed to save some products.");
+      setError('Failed to save some products.');
     } finally {
       setLoading(false);
     }
@@ -84,7 +84,6 @@ export default function AddProduct() {
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-soft-light pointer-events-none"></div>
 
         <div className="max-w-5xl w-full mx-auto relative z-10">
-
           {/* Header & Controls */}
           <div className="flex justify-between items-end mb-8 border-b-2 border-[var(--color-brand-blue)] pb-4">
             <div>
@@ -93,12 +92,19 @@ export default function AddProduct() {
                 Add multiple products at once.
               </p>
             </div>
-
           </div>
 
           {/* Notifications */}
-          {error && <div className="bg-red-900/40 border border-red-500 text-red-200 px-4 py-3 rounded mb-6 font-bold">{error}</div>}
-          {success && <div className="bg-green-900/40 border border-green-500 text-green-200 px-4 py-3 rounded mb-6 font-bold">{success}</div>}
+          {error && (
+            <div className="bg-red-900/40 border border-red-500 text-red-200 px-4 py-3 rounded mb-6 font-bold">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="bg-green-900/40 border border-green-500 text-green-200 px-4 py-3 rounded mb-6 font-bold">
+              {success}
+            </div>
+          )}
 
           {/* Scanned Items Table */}
           <div className="bg-[var(--color-brand-surface)] border border-[var(--color-brand-border)] rounded-lg shadow-2xl overflow-hidden min-h-[400px]">
@@ -116,7 +122,19 @@ export default function AddProduct() {
                   <span className="text-5xl mb-4">📦</span>
                   <p>No products added yet.</p>
                   <button
-                    onClick={() => setScannedItems([...scannedItems, { id: Date.now(), name: "", price: "", stock: "", unit: "pcs", categoryId: "" }])}
+                    onClick={() =>
+                      setScannedItems([
+                        ...scannedItems,
+                        {
+                          id: Date.now(),
+                          name: '',
+                          price: '',
+                          stock: '',
+                          unit: 'pcs',
+                          categoryId: '',
+                        },
+                      ])
+                    }
                     className="mt-4 text-blue-400 font-bold hover:underline"
                   >
                     + Add First Product
@@ -124,7 +142,10 @@ export default function AddProduct() {
                 </div>
               ) : (
                 scannedItems.map((item, index) => (
-                  <div key={item.id} className="grid grid-cols-12 p-4 items-center gap-4 hover:bg-[var(--color-brand-black)]/30 transition-colors">
+                  <div
+                    key={item.id}
+                    className="grid grid-cols-12 p-4 items-center gap-4 hover:bg-[var(--color-brand-black)]/30 transition-colors"
+                  >
                     <div className="col-span-4">
                       <input
                         className="w-full bg-transparent border-b border-transparent hover:border-gray-600 focus:border-[var(--color-brand-blue)] focus:outline-none text-white font-bold"
@@ -136,7 +157,7 @@ export default function AddProduct() {
                     <div className="col-span-2">
                       <select
                         className="w-full bg-[var(--color-brand-black)] border-b border-gray-700 focus:border-[var(--color-brand-blue)] focus:outline-none text-white text-sm py-1"
-                        value={item.unit || "pcs"}
+                        value={item.unit || 'pcs'}
                         onChange={(e) => handleItemChange(item.id, 'unit', e.target.value)}
                       >
                         <option value="pcs">Pcs</option>
@@ -150,7 +171,9 @@ export default function AddProduct() {
                       </select>
                     </div>
                     <div className="col-span-3 relative">
-                      <span className="absolute left-0 text-[var(--color-brand-text-muted)]">₹</span>
+                      <span className="absolute left-0 text-[var(--color-brand-text-muted)]">
+                        ₹
+                      </span>
                       <input
                         className="w-full pl-4 bg-transparent border-b border-transparent hover:border-gray-600 focus:border-[var(--color-brand-blue)] focus:outline-none text-white"
                         value={item.price}
@@ -184,7 +207,12 @@ export default function AddProduct() {
 
           <div className="mt-6 flex justify-end gap-4">
             <button
-              onClick={() => setScannedItems([...scannedItems, { id: Date.now(), name: "", price: "", stock: "", unit: "pcs", categoryId: "" }])}
+              onClick={() =>
+                setScannedItems([
+                  ...scannedItems,
+                  { id: Date.now(), name: '', price: '', stock: '', unit: 'pcs', categoryId: '' },
+                ])
+              }
               className="px-6 py-3 border border-[var(--color-brand-border)] text-[var(--color-brand-text)] font-bold uppercase rounded hover:bg-[var(--color-brand-surface)] transition-all"
             >
               + Add Manually
@@ -194,10 +222,9 @@ export default function AddProduct() {
               disabled={scannedItems.length === 0 || loading}
               className="px-8 py-3 bg-[var(--color-brand-blue)] text-white font-bold uppercase rounded shadow-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              {loading ? "Saving..." : `Save ${scannedItems.length} Products`}
+              {loading ? 'Saving...' : `Save ${scannedItems.length} Products`}
             </button>
           </div>
-
         </div>
       </main>
     </div>

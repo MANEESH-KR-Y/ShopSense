@@ -1,15 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { productAPI } from "../../services/inventoryApi";
-import Sidebar from "../../components/Sidebar";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from 'react';
+import { productAPI } from '../../services/inventoryApi';
+import Sidebar from '../../components/Sidebar';
+import { useNavigate } from 'react-router-dom';
 
 export default function Products() {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
 
   const fetchProducts = async () => {
     try {
@@ -20,14 +16,18 @@ export default function Products() {
     }
   };
 
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
+    if (window.confirm('Are you sure you want to delete this product?')) {
       try {
         await productAPI.deleteProduct(id);
         fetchProducts(); // Refresh list
       } catch (err) {
-        console.error("Failed to delete", err);
-        const msg = err.response?.data?.error || "Failed to delete product";
+        console.error('Failed to delete', err);
+        const msg = err.response?.data?.error || 'Failed to delete product';
         alert(msg);
       }
     }
@@ -40,27 +40,39 @@ export default function Products() {
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-soft-light pointer-events-none"></div>
         <div className="relative z-10">
           <div className="flex justify-between items-center mb-8 pb-4 border-b border-[var(--color-brand-border)]">
-            <h1 className="text-2xl font-bold text-white">
-              Product Inventory
-            </h1>
-
+            <h1 className="text-2xl font-bold text-white">Product Inventory</h1>
           </div>
 
           <div className="bg-[var(--color-brand-black)] border border-[var(--color-brand-border)] rounded-lg overflow-hidden">
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-[var(--color-brand-surface)] border-b border-[var(--color-brand-border)]">
-                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">Product Name</th>
-                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">Category</th>
-                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">Unit</th>
-                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">Stock</th>
-                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">Price</th>
-                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">Actions</th>
+                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">
+                    Product Name
+                  </th>
+                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">
+                    Category
+                  </th>
+                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">
+                    Unit
+                  </th>
+                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">
+                    Stock
+                  </th>
+                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">
+                    Price
+                  </th>
+                  <th className="text-left p-4 text-[var(--color-brand-text-muted)] font-bold text-xs uppercase tracking-widest border-b border-[var(--color-brand-border)]">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--color-brand-border)]">
                 {products.map((p) => (
-                  <tr key={p.id} className="hover:bg-[var(--color-brand-surface-hover)] transition-colors">
+                  <tr
+                    key={p.id}
+                    className="hover:bg-[var(--color-brand-surface-hover)] transition-colors"
+                  >
                     <td className="p-4">{p.name}</td>
                     <td className="p-4">{p.category_name}</td>
                     <td className="p-4 font-mono text-sm">{p.unit || 'pcs'}</td>
@@ -69,12 +81,14 @@ export default function Products() {
                     <td className="p-4 flex space-x-2">
                       <button
                         onClick={() => navigate(`/inventory/edit/${p.id}`)}
-                        className="text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)] font-bold text-sm transition-colors">
+                        className="text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)] font-bold text-sm transition-colors"
+                      >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDelete(p.id)}
-                        className="text-red-500 hover:text-red-400 font-bold text-sm transition-colors">
+                        className="text-red-500 hover:text-red-400 font-bold text-sm transition-colors"
+                      >
                         Delete
                       </button>
                     </td>

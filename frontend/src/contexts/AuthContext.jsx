@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { authAPI } from "../services/api";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authAPI } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -7,23 +7,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // --------------------------
-  // Load session on refresh
-  // --------------------------
-  useEffect(() => {
-    const init = async () => {
-      // Always try to refresh/get a token first to ensure we have one for API calls
-      const refreshed = await tryRefresh();
-      if (!refreshed) {
-        setLoading(false);
-      } else {
-        setLoading(false);
-      }
-    };
-
-    init();
-  }, []);
 
   // --------------------------
   // Refresh access token
@@ -47,6 +30,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   // --------------------------
+  // Load session on refresh
+  // --------------------------
+  useEffect(() => {
+    const init = async () => {
+      // Always try to refresh/get a token first to ensure we have one for API calls
+      const refreshed = await tryRefresh();
+      if (!refreshed) {
+        setLoading(false);
+      } else {
+        setLoading(false);
+      }
+    };
+
+    init();
+  }, []);
+
+  // --------------------------
   // Login
   // --------------------------
   const login = async (credentials) => {
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.error || "Login failed",
+        error: err.response?.data?.error || 'Login failed',
       };
     }
   };
@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.error || "OTP Login failed"
+        error: err.response?.data?.error || 'OTP Login failed',
       };
     }
   };
@@ -112,7 +112,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.error || "Registration failed",
+        error: err.response?.data?.error || 'Registration failed',
       };
     }
   };
